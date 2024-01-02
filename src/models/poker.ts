@@ -12,4 +12,5 @@ export interface PokerUser {
     estimatePoint?: number
     activeSessions: string[]
     isOwner?: boolean
+    isSpectator?: boolean
 }

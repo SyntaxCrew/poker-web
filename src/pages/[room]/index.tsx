@@ -26,7 +26,10 @@ export default function PokerRoomPage() {
                     roomID: room!,
                     onNotFound: () => navigate('/'),
                     onNewJoiner() {
-                        return prompt("Enter your display name!")!;
+                        return {
+                            displayName: prompt("Enter your display name!")!,
+                            isSpectator: undefined,
+                        };
                     },
                     onNext(data) {
                         setPoker(data.data())
@@ -48,7 +51,7 @@ export default function PokerRoomPage() {
                 <>
                     <div>Room: { room }</div>
                     <div>Profile: { profile.userUUID }</div>
-                    {poker && Object.keys(poker.user).filter(userUUID => userUUID === profile.userUUID || poker.user[userUUID].activeSessions?.length).map(userUUID => {
+                    {poker && Object.keys(poker.user).filter(userUUID => poker.user[userUUID].activeSessions?.length && !poker.user[userUUID].isSpectator).map(userUUID => {
                         return (
                             <div key={userUUID}>
                                 Display Name: {poker.user[userUUID].displayName}

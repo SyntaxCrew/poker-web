@@ -16,7 +16,7 @@ export async function joinPokerRoom(req: {
     userUUID: string,
     sessionUUID: string,
     roomID: string,
-    onNewJoiner: (() => string),
+    onNewJoiner: (() => {displayName: string, isSpectator?: boolean}),
     onNext: ((snapshot: DocumentSnapshot<Poker, DocumentData>) => void),
     onNotFound: (() => void),
 }) {
@@ -28,12 +28,12 @@ export async function joinPokerRoom(req: {
 
     // set display name on new joiner
     if (!docSnap.data().user[req.userUUID]) {
-        const displayName = req.onNewJoiner();
+        const { displayName, isSpectator } = req.onNewJoiner();
         if (!displayName) {
             req.onNotFound();
             return;
         }
-        await newJoiner(req.userUUID, displayName, req.roomID);
+        await newJoiner(req.userUUID, req.roomID, displayName, isSpectator);
     }
 
     // set active session
@@ -64,14 +64,31 @@ export async function leavePokerRoom(userUUID: string, sessionUUID: string, room
     return await updateActiveSession(userUUID, sessionUUID, roomID, 'leave');
 }
 
+export async function pokeCard(userUUID: string, roomID: string, estimatePoint?: number) {
+    await updateDoc(pokerDoc(roomID), {
+        [`user.${userUUID}.estimatePoint`]: estimatePoint,
+        updatedAt: new Date(),
+    });
+}
+
+export async function openCard(roomID: string, isShowEstimates: boolean) {
+    await updateDoc(pokerDoc(roomID), {
+        isShowEstimates,
+        updatedAt: new Date(),
+    });
+}
+
 async function updateActiveSession(userUUID: string, sessionUUID: string, roomID: string, event: 'join' | 'leave') {
     await updateDoc(pokerDoc(roomID), {
         [`user.${userUUID}.activeSessions`]: event === 'join' ? arrayUnion(sessionUUID) : arrayRemove(sessionUUID),
-    })
+        updatedAt: new Date(),
+    });
 }
 
-async function newJoiner(userUUID: string, displayName: string, roomID: string) {
+async function newJoiner(userUUID: string, roomID: string, displayName: string, isSpectator?: boolean) {
     await updateDoc(pokerDoc(roomID), {
         [`user.${userUUID}.displayName`]: displayName,
-    })
+        [`user.${userUUID}.isSpectator`]: isSpectator,
+        updatedAt: new Date(),
+    });
 }
