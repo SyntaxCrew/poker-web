@@ -1,5 +1,4 @@
 export interface Poker {
-    roomID: string
     isShowEstimates: boolean
     owner: PokerUser
     guests: PokerUser[]
