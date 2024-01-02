@@ -1,5 +1,4 @@
 import { DocumentData, onSnapshot, doc, setDoc, getDoc, DocumentSnapshot, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
-import { getDatabase, onValue, ref } from "firebase/database";
 import firestore from "./firestore";
 import { converter } from "../models/firestore";
 import { Poker } from "../models/poker";
@@ -37,13 +36,8 @@ export async function joinPokerRoom(req: {
         await newJoiner(req.userUUID, displayName, req.roomID);
     }
 
-    // set realtime connection
-    const realtimeRef = ref(getDatabase(), '.info/connected');
-    onValue(realtimeRef, async (snapshot) => {
-        if (snapshot.val() === true) {
-            await updateActiveSession(req.userUUID, req.sessionUUID, req.roomID, 'join');
-        }
-    })
+    // set active session
+    await updateActiveSession(req.userUUID, req.sessionUUID, req.roomID, 'join');
 
     return onSnapshot(pokerDoc(req.roomID), req.onNext);
 }
