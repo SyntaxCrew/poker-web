@@ -66,7 +66,7 @@ export async function leavePokerRoom(userUUID: string, sessionUUID: string, room
 
 export async function pokeCard(userUUID: string, roomID: string, estimatePoint?: number) {
     await updateDoc(pokerDoc(roomID), {
-        [`user.${userUUID}.estimatePoint`]: estimatePoint,
+        [`user.${userUUID}.estimatePoint`]: estimatePoint || null,
         updatedAt: new Date(),
     });
 }
