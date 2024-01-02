@@ -1,33 +1,46 @@
-import { useState } from 'react'
-import reactLogo from '../assets/react.svg'
-import viteLogo from '/vite.svg'
-import '../App.css'
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { createPokerRoom, isExistsPokerRoom } from '../firebase/poker';
+import { UserProfile } from '../models/user';
+import { getUserProfile } from '../repository/user';
+import { pressEnter } from '../utils/input';
 
 export default function HomePage() {
-    const [count, setCount] = useState(0)
+    const navigate = useNavigate();
+    const [roomID, setRoomID] = useState('');
+    const [profile, setProfile] = useState<UserProfile>({userType: 'anonymous', userUUID: '', sessionUUID: ''});
+
+    useEffect(() => {
+        init();
+        async function init() {
+            setProfile(await getUserProfile());
+        }
+    }, []);
+
+    async function joinRoom() {
+        const isRoomExists = await isExistsPokerRoom(roomID);
+        if (!isRoomExists) {
+            alert("NOT EXISTS");
+            return;
+        }
+        navigate(`/${roomID}`);
+    }
+
+    async function createRoom() {
+        const displayName = prompt("Enter your display name!");
+        if (displayName) {
+            const roomID = await createPokerRoom(profile.userUUID, displayName);
+            navigate(`/${roomID}`);
+        }
+    }
 
     return (
         <>
-            <div>
-                <a href="https://vitejs.dev" target="_blank">
-                    <img src={viteLogo} className="logo" alt="Vite logo" />
-                </a>
-                <a href="https://react.dev" target="_blank">
-                    <img src={reactLogo} className="logo react" alt="React logo" />
-                </a>
+            <div className="flex gap-2 m-auto w-full">
+                <input type="text" className='rounded-md px-4' placeholder='Enter Room Number' onChange={e => setRoomID(e.target.value)} onKeyDown={pressEnter(joinRoom)} />
+                <button onClick={joinRoom}>Enter</button>
             </div>
-            <h1>Vite + React</h1>
-            <div className="card">
-            <button onClick={() => setCount((count) => count + 1)}>
-                count is {count}
-            </button>
-            <p>
-                Edit <code>src/App.tsx</code> and save to test HMR
-            </p>
-            </div>
-                <p className="read-the-docs">
-                Click on the Vite and React logos to learn more
-            </p>
+            <button className='mt-2' onClick={createRoom}>Create Instant Room</button>
         </>
     )
 }

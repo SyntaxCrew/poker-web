@@ -1,14 +1,15 @@
+import { Map } from "./generic"
+
 export interface Poker {
     isShowEstimates: boolean
-    owner: PokerUser
-    guests: PokerUser[]
+    user: Map<PokerUser>
     createdAt: Date
     updatedAt?: Date
 }
 
 export interface PokerUser {
-    userUUID: string
     displayName: string
     estimatePoint?: number
-    deviceActiveCount: number // for listening user leave room, then terminate the guest if device is decreased to zero
+    activeSessions: string[]
+    isOwner?: boolean
 }
