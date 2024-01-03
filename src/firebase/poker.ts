@@ -1,7 +1,7 @@
 import { DocumentData, onSnapshot, doc, setDoc, getDoc, DocumentSnapshot, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
 import firestore from "./firestore";
 import { converter } from "../models/firestore";
-import { Poker } from "../models/poker";
+import { Poker, PokerOption } from "../models/poker";
 import { randomString } from "../utils/generator";
 import { Map } from "../models/generic";
 
@@ -43,17 +43,18 @@ export async function joinPokerRoom(req: {
     return onSnapshot(pokerDoc(req.roomID), req.onNext);
 }
 
-export async function createPokerRoom(userUUID: string, displayName: string): Promise<string> {
+export async function createPokerRoom(userUUID: string, displayName: string, option: PokerOption): Promise<string> {
     const roomID = randomString(20);
     const poker: Poker = {
         isShowEstimates: false,
         user: {
             [userUUID]: {
                 displayName,
-                isOwner: true,
+                isFacilitator: true,
                 activeSessions: [],
             }
         },
+        option,
         createdAt: new Date(),
     }
 

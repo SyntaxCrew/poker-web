@@ -4,11 +4,23 @@ import { createPokerRoom, isExistsPokerRoom } from '../firebase/poker';
 import { UserProfile } from '../models/user';
 import { getUserProfile } from '../repository/user';
 import { pressEnter } from '../utils/input';
+import { PokerOption } from '../models/poker';
 
 export default function HomePage() {
     const navigate = useNavigate();
     const [roomID, setRoomID] = useState('');
     const [profile, setProfile] = useState<UserProfile>({userType: 'anonymous', userUUID: '', sessionUUID: ''});
+    const [pokerOption] = useState<PokerOption>({
+        allowOthersToClearUsers: false,
+        allowOthersToDeleteEstimates: false,
+        allowOthersToShowEstimates: true,
+        allowEditEstimateAfterShowEstimate: false,
+        autoRevealCards: true,
+        estimateOptions: ['0', '1', '2', '3', '5', '8', '13', '21', '34', '55', '89', '?', '☕'],
+        showAverage: true,
+        showMedian: true,
+        showTimer: false,
+    })
 
     useEffect(() => {
         init();
@@ -29,7 +41,7 @@ export default function HomePage() {
     async function createRoom() {
         const displayName = prompt("Enter your display name!");
         if (displayName) {
-            const roomID = await createPokerRoom(profile.userUUID, displayName);
+            const roomID = await createPokerRoom(profile.userUUID, displayName, pokerOption);
             navigate(`/${roomID}`);
         }
     }
