@@ -9,7 +9,7 @@ export interface Poker {
 
 export interface PokerUser {
     displayName: string
-    estimatePoint?: number
+    estimatePoint?: string
     activeSessions: string[]
     isOwner?: boolean
     isSpectator?: boolean

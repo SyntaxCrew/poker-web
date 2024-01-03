@@ -14,9 +14,9 @@ export default function PokerRoomPage() {
     const [isLoading, setLoading] = useState(true);
     const [poker, setPoker] = useState<Poker>();
     const [profile, setProfile] = useState<UserProfile>({userType: 'anonymous', userUUID: '', sessionUUID: ''});
-    const [currentEstimatePoint, setCurrentEstimatePoint] = useState<number>();
+    const [currentEstimatePoint, setCurrentEstimatePoint] = useState<string>();
 
-    const estimatePoints: (number | '?' | '!')[] = [0, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, '?', '!'];
+    const estimatePoints: string[] = ['0', '1', '2', '3', '5', '8', '13', '21', '34', '55', '89', '?', '☕'];
 
     useBeforeUnload(async () => await leavePokerRoom(profile.userUUID, profile.sessionUUID, room!));
     useEffect(() => {
@@ -80,7 +80,11 @@ export default function PokerRoomPage() {
             <div className="p-2 sm:p-4">
                 {!isLoading && (
                     <div className="flex gap-2 flex-wrap w-fit">
-                        {poker && Object.keys(poker.user).filter(userUUID => poker.user[userUUID].activeSessions?.length && !poker.user[userUUID].isSpectator).sort().map(userUUID => {
+                        {poker && Object.
+                                    keys(poker.user).
+                                    sort((a, b) => poker.user[a].displayName.localeCompare(poker.user[b].displayName)).
+                                    filter(userUUID => poker.user[userUUID].estimatePoint != null || (poker.user[userUUID].activeSessions?.length && !poker.user[userUUID].isSpectator)).
+                                    map(userUUID => {
                             return (
                                 <UserCard
                                     key={userUUID}
