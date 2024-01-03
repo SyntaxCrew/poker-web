@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useBeforeUnload, useNavigate, useParams } from "react-router-dom";
 import PokerLogo from '/poker.png'
 import EstimatePointCard from "../../components/EstimatePointCard";
-import { joinPokerRoom, leavePokerRoom, pokeCard } from '../../firebase/poker';
+import UserCard from "../../components/UserCard";
+import { joinPokerRoom, leavePokerRoom, openCard, pokeCard } from '../../firebase/poker';
 import { Poker } from "../../models/poker";
 import { UserProfile } from '../../models/user';
 import { getUserProfile } from '../../repository/user';
@@ -33,7 +34,7 @@ export default function PokerRoomPage() {
                     onNewJoiner() {
                         return {
                             displayName: prompt("Enter your display name!")!,
-                            isSpectator: undefined,
+                            isSpectator: false,
                         };
                     },
                     onNext(data) {
@@ -52,53 +53,61 @@ export default function PokerRoomPage() {
                 });
 
             } catch (error) {
+                console.log(error)
                 navigate('/');
             }
         }
     }, [])
 
-    const estimatePointConverter = (point: number) => {
-        if (point === -2) {
-            return (
-                <img src="/tea.png" className="w-10 h-10 m-auto" alt="Tea card" />
-            )
-        } else if (point === -1) {
-            return '?'
-        }
-        return point
-    }
-
     return (
         <>
-            <div className="flex items-center gap-2">
-                <img src={PokerLogo} className="w-10 h-10" alt="Poker logo" />
-                <span>{ room }</span>
+            <div className="flex items-center justify-between px-2 sm:px-4 h-20 bg-red-200">
+                <div className="flex items-center gap-2">
+                    <img src={PokerLogo} className="w-10 h-10" alt="Poker logo" />
+                    <span>{ room }</span>
+                </div>
+                { !isLoading && poker &&
+                    <button
+                        className="rounded-md px-2 bg-green-500 text-black py-1 ease-in duration-200 hover:bg-green-600"
+                        onClick={() => openCard(room!, !poker.isShowEstimates)}
+                        disabled={Object.keys(poker?.user).filter(userUUID => poker.user[userUUID].estimatePoint != null)?.length == 0 || false}
+                    >
+                        { poker.isShowEstimates ? 'Vote Next Issue' : 'Show Cards' }
+                    </button>
+                }
             </div>
 
-            {!isLoading && (
-                <div className="flex gap-2 flex-wrap w-fit">
-                    {poker && Object.keys(poker.user).filter(userUUID => poker.user[userUUID].activeSessions?.length && !poker.user[userUUID].isSpectator).map(userUUID => {
+            <div className="p-2 sm:p-4">
+                {!isLoading && (
+                    <div className="flex gap-2 flex-wrap w-fit">
+                        {poker && Object.keys(poker.user).filter(userUUID => poker.user[userUUID].activeSessions?.length && !poker.user[userUUID].isSpectator).sort().map(userUUID => {
+                            return (
+                                <UserCard
+                                    key={userUUID}
+                                    displayName={poker.user[userUUID].displayName}
+                                    isShowEstimates={poker.isShowEstimates}
+                                    estimatePoint={poker.user[userUUID].estimatePoint}
+                                />
+                            )
+                        })}
+                    </div>
+                )}
+            </div>
+
+            <div className="absolute z-10 bottom-0 w-full p-2 sm:p-4 bg-yellow-200">
+                {!poker?.isShowEstimates && <div className="flex flex-wrap justify-center items-center gap-3">
+                    {estimatePoints.map(estimatePoint => {
                         return (
-                            <div key={userUUID} className="rounded-md m-auto">
-                                <div>{poker.user[userUUID].displayName}</div>
-                                {poker.user[userUUID].estimatePoint !== undefined && <div>Estimate Point: {estimatePointConverter(poker.user[userUUID].estimatePoint!)}</div>}
-                            </div>
+                            <EstimatePointCard
+                                key={estimatePoint}
+                                estimatePoint={estimatePoint}
+                                currentPoint={currentEstimatePoint}
+                                onSelect={(point) => pokeCard(profile.userUUID, room!, point)}
+                            />
                         )
                     })}
-                </div>
-            )}
-
-            <div className="flex gap-2">
-                {estimatePoints.map(estimatePoint => {
-                    return (
-                        <EstimatePointCard
-                            key={estimatePoint}
-                            estimatePoint={estimatePoint}
-                            currentPoint={currentEstimatePoint}
-                            onSelect={(point) => pokeCard(profile.userUUID, room!, point)}
-                        />
-                    )
-                })}
+                </div>}
+                {poker?.isShowEstimates && <div className="text-black">RESULT VOTES</div>}
             </div>
         </>
     );

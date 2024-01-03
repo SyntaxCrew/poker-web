@@ -3,6 +3,7 @@ import firestore from "./firestore";
 import { converter } from "../models/firestore";
 import { Poker } from "../models/poker";
 import { randomString } from "../utils/generator";
+import { Map } from "../models/generic";
 
 const pokerCollection = "poker";
 const pokerDoc = (roomID: string) => doc(firestore, pokerCollection, roomID).withConverter(converter<Poker>());
@@ -16,7 +17,7 @@ export async function joinPokerRoom(req: {
     userUUID: string,
     sessionUUID: string,
     roomID: string,
-    onNewJoiner: (() => {displayName: string, isSpectator?: boolean}),
+    onNewJoiner: (() => {displayName: string, isSpectator: boolean}),
     onNext: ((snapshot: DocumentSnapshot<Poker, DocumentData>) => void),
     onNotFound: (() => void),
 }) {
@@ -66,16 +67,28 @@ export async function leavePokerRoom(userUUID: string, sessionUUID: string, room
 
 export async function pokeCard(userUUID: string, roomID: string, estimatePoint?: number) {
     await updateDoc(pokerDoc(roomID), {
-        [`user.${userUUID}.estimatePoint`]: estimatePoint || null,
+        [`user.${userUUID}.estimatePoint`]: estimatePoint ?? null,
         updatedAt: new Date(),
     });
 }
 
 export async function openCard(roomID: string, isShowEstimates: boolean) {
-    await updateDoc(pokerDoc(roomID), {
+    let data = {
         isShowEstimates,
         updatedAt: new Date(),
-    });
+    };
+    if (!isShowEstimates) {
+        const docSnap = await getDoc(pokerDoc(roomID));
+        const poker = docSnap.data();
+        if (poker) {
+            const userData: Map<null> = {};
+            for (const userUUID of Object.keys(poker.user)) {
+                userData[`user.${userUUID}.estimatePoint`] = null;
+            }
+            data = {...data, ...userData};
+        }
+    }
+    return await updateDoc(pokerDoc(roomID), data);
 }
 
 async function updateActiveSession(userUUID: string, sessionUUID: string, roomID: string, event: 'join' | 'leave') {
@@ -85,7 +98,7 @@ async function updateActiveSession(userUUID: string, sessionUUID: string, roomID
     });
 }
 
-async function newJoiner(userUUID: string, roomID: string, displayName: string, isSpectator?: boolean) {
+async function newJoiner(userUUID: string, roomID: string, displayName: string, isSpectator: boolean) {
     await updateDoc(pokerDoc(roomID), {
         [`user.${userUUID}.displayName`]: displayName,
         [`user.${userUUID}.isSpectator`]: isSpectator,
