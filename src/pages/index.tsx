@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPokerRoom, isExistsPokerRoom } from '../firebase/poker';
+import { getUserProfile } from '../firebase/user';
 import { UserProfile } from '../models/user';
-import { getUserProfile } from '../repository/user';
 import { pressEnter } from '../utils/input';
 import { PokerOption } from '../models/poker';
 
@@ -19,12 +19,15 @@ export default function HomePage() {
         showAverage: true,
         showMedian: true,
         showTimer: false,
-    })
+    });
 
     useEffect(() => {
         init();
         async function init() {
-            setProfile(await getUserProfile());
+            const user = await getUserProfile();
+            if (user) {
+                setProfile(user);
+            }
         }
     }, []);
 

@@ -6,7 +6,7 @@ import UserCard from "../../components/UserCard";
 import { clearUsers, joinGame, joinPokerRoom, leavePokerRoom, updateEstimateStatus, pokeCard } from '../../firebase/poker';
 import { EstimateStatus, Poker } from "../../models/poker";
 import { UserProfile } from '../../models/user';
-import { getUserProfile } from '../../repository/user';
+import { getUserProfile } from '../../firebase/user';
 
 export default function PokerRoomPage() {
     const { room } = useParams();
@@ -23,6 +23,9 @@ export default function PokerRoomPage() {
         async function init() {
             try {
                 const userProfile = await getUserProfile();
+                if (!userProfile) {
+                    return;
+                }
                 setProfile(userProfile);
 
                 await joinPokerRoom({
