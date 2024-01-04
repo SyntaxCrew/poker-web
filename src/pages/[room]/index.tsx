@@ -173,7 +173,7 @@ export default function PokerRoomPage() {
                             { poker.user[profile.userUUID]?.isSpectator ? 'Join' : 'Leave' }
                         </button>
                         {
-                            (poker.user[profile.userUUID]?.isFacilitator || poker.option.allowOthersToDeleteEstimates) &&
+                            isUsersExists() && (poker.user[profile.userUUID]?.isFacilitator || (poker.option.allowOthersToDeleteEstimates && !poker.user[profile.userUUID]?.isSpectator && poker.user[profile.userUUID]?.activeSessions?.length > 0)) &&
                             <button
                                 className="rounded-md px-2 bg-red-500 text-white py-1 ease-in duration-200 hover:bg-red-600"
                                 onClick={() => isUsersExists() && clearUsers(room!)}
@@ -208,9 +208,12 @@ export default function PokerRoomPage() {
                                     return (
                                         <UserCard
                                             key={userUUID}
+                                            roomID={room!}
+                                            userUUID={userUUID}
                                             displayName={poker.user[userUUID].displayName}
                                             isShowEstimates={poker.estimateStatus === 'OPENED'}
                                             estimatePoint={poker.user[userUUID].estimatePoint}
+                                            allowOthersToDeleteEstimates={(poker.user[profile.userUUID]?.isFacilitator || poker.option.allowOthersToDeleteEstimates) && userUUID !== profile.userUUID}
                                         />
                                     )
                                 })
