@@ -16,6 +16,7 @@ export default function PokerRoomPage() {
     const [profile, setProfile] = useState<UserProfile>({userType: 'anonymous', userUUID: '', sessionUUID: ''});
     const [currentEstimatePoint, setCurrentEstimatePoint] = useState<string>();
     const [countdown, setCountdown] = useState(0);
+    const [isCountingDown, setCountingDown] = useState(false);
 
     useBeforeUnload(async () => await leavePokerRoom(profile.userUUID, profile.sessionUUID, room!));
     useEffect(() => {
@@ -74,15 +75,11 @@ export default function PokerRoomPage() {
                                         }
                                     }
                                 }
+
+                                // update multiple times depend on active users
                                 if (hasUser && isVoteAll && poker.estimateStatus === 'CLOSED') {
                                     updateEstimateStatus(room!, 'OPENING');
                                 }
-                            }
-
-                            if (poker.estimateStatus === 'OPENING') {
-                                setCountdown(2);
-                            } else if (poker.estimateStatus === 'OPENED') {
-                                setCountdown(0);
                             }
 
                         } catch (error) {
@@ -97,6 +94,16 @@ export default function PokerRoomPage() {
         }
     }, [])
 
+    useEffect(() => {
+        if (poker?.estimateStatus === 'OPENING' && !isCountingDown) {
+            setCountdown(2);
+            setCountingDown(true);
+        } else if (poker?.estimateStatus === 'OPENED' && isCountingDown) {
+            setCountdown(0);
+            setCountingDown(false);
+        }
+    }, [isCountingDown, poker])
+
     // Countdown for reveal cards
     useEffect(() => {
         const timer = countdown > 0 && setInterval(() => {
@@ -105,8 +112,14 @@ export default function PokerRoomPage() {
         if (typeof timer == "number") {
             return () => clearInterval(timer);
         }
-        if (poker?.estimateStatus !== 'OPENED' && isUsersExists(true)) {
-            updateEstimateStatus(room!, 'OPENED');
+        if (poker && poker.estimateStatus !== 'OPENED') {
+            for (const userUUID of Object.keys(poker.user)) {
+                // update multiple times depend on active users
+                if (!poker.user[userUUID].isSpectator && poker.user[userUUID].estimatePoint != null) {
+                    updateEstimateStatus(room!, 'OPENED');
+                    break;
+                }
+            }
         }
     }, [countdown]);
 
@@ -159,7 +172,7 @@ export default function PokerRoomPage() {
 
                         <button
                             className="rounded-md px-2 bg-blue-500 text-white py-1 ease-in duration-200 hover:bg-blue-600"
-                            disabled={poker.estimateStatus === 'OPENING'}
+                            disabled={poker.estimateStatus !== 'CLOSED'}
                             onClick={() => joinGame(poker, profile.userUUID, profile.sessionUUID, room!, poker.user[profile.userUUID]?.isSpectator ? 'join' : 'leave')}
                         >
                             { poker.user[profile.userUUID]?.isSpectator ? 'Join' : 'Leave' }
@@ -219,7 +232,7 @@ export default function PokerRoomPage() {
                                     key={estimatePoint}
                                     estimatePoint={estimatePoint}
                                     currentPoint={currentEstimatePoint}
-                                    disabled={poker?.estimateStatus !== 'CLOSED' || countdown > 0}
+                                    disabled={poker?.estimateStatus !== 'CLOSED'}
                                     onSelect={(point) => pokeCard(profile.userUUID, room!, point)}
                                 />
                             )

@@ -1,9 +1,10 @@
-import { DocumentData, onSnapshot, doc, setDoc, getDoc, DocumentSnapshot, updateDoc, arrayUnion, arrayRemove, FieldValue } from "firebase/firestore";
+import { DocumentData, onSnapshot, doc, setDoc, getDoc, DocumentSnapshot, updateDoc, arrayUnion, arrayRemove, FieldValue, deleteField } from "firebase/firestore";
 import firestore from "./firestore";
 import { converter } from "../models/firestore";
-import { EstimateStatus, Poker, PokerOption } from "../models/poker";
-import { randomString } from "../utils/generator";
 import { Map } from "../models/generic";
+import { EstimateStatus, Poker, PokerHistory, PokerOption } from "../models/poker";
+import { randomString } from "../utils/generator";
+import { timeDiffString } from "../utils/time";
 
 const pokerCollection = "poker";
 const pokerDoc = (roomID: string) => doc(firestore, pokerCollection, roomID).withConverter(converter<Poker>());
@@ -46,6 +47,7 @@ export async function joinPokerRoom(req: {
 export async function createPokerRoom(userUUID: string, displayName: string, option: PokerOption): Promise<string> {
     const roomID = randomString(20);
     const poker: Poker = {
+        session: randomString(20),
         estimateStatus: 'CLOSED',
         user: {
             [userUUID]: {
@@ -144,17 +146,54 @@ export async function pokeCard(userUUID: string, roomID: string, estimatePoint?:
 }
 
 export async function updateEstimateStatus(roomID: string, estimateStatus: EstimateStatus) {
+    const now = new Date();
     let data = {
         estimateStatus,
-        updatedAt: new Date(),
+        updatedAt: now,
     };
-    if (estimateStatus === 'CLOSED') {
+    if (['CLOSED', 'OPENED'].includes(estimateStatus)) {
         const docSnap = await getDoc(pokerDoc(roomID));
         const poker = docSnap.data();
         if (poker) {
-            const userData: Map<null> = {};
-            for (const userUUID of Object.keys(poker.user)) {
-                userData[`user.${userUUID}.estimatePoint`] = null;
+            // prevent update concurrent by other users
+            if (estimateStatus === poker.estimateStatus) {
+                return;
+            }
+
+            const userData: Map<null | FieldValue | Date | PokerHistory | string> = {};
+            if (estimateStatus === 'CLOSED') {
+                userData.issueName = deleteField();
+                userData.votingAt = now;
+                for (const userUUID of Object.keys(poker.user)) {
+                    userData[`user.${userUUID}.estimatePoint`] = null;
+                    userData.session = randomString(20);
+                }
+
+            } else if (estimateStatus === 'OPENED') {
+                const pokerHistory: PokerHistory = {
+                    issueName: poker.issueName,
+                    date: now,
+                    total: 0,
+                    voted: 0,
+                    playerResult: [],
+                    result: '',
+                }
+                if (poker.votingAt) {
+                    pokerHistory.duration = timeDiffString(poker.votingAt.toDate(), now)
+                }
+                for (const userUUID of Object.keys(poker.user)) {
+                    if (!poker.user[userUUID].isSpectator && (poker.user[userUUID].activeSessions?.length > 0 || poker.user[userUUID].estimatePoint != null)) {
+                        pokerHistory.total++;
+                    }
+                    if (poker.user[userUUID].estimatePoint != null) {
+                        pokerHistory.voted++;
+                        pokerHistory.playerResult.push({
+                            displayName: poker.user[userUUID].displayName,
+                            estimatePoint: poker.user[userUUID].estimatePoint!,
+                        })
+                    }
+                }
+                userData[`history.${poker.session}`] = pokerHistory;
             }
             data = {...data, ...userData};
         }
