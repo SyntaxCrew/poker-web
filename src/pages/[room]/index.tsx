@@ -3,7 +3,7 @@ import { useBeforeUnload, useNavigate, useParams } from "react-router-dom";
 import PokerLogo from '/poker.png'
 import EstimatePointCard from "../../components/EstimatePointCard";
 import UserCard from "../../components/UserCard";
-import { clearUsers, joinPokerRoom, leavePokerRoom, openCard, pokeCard } from '../../firebase/poker';
+import { clearUsers, joinGame, joinPokerRoom, leavePokerRoom, openCard, pokeCard } from '../../firebase/poker';
 import { Poker } from "../../models/poker";
 import { UserProfile } from '../../models/user';
 import { getUserProfile } from '../../repository/user';
@@ -136,10 +136,16 @@ export default function PokerRoomPage() {
                 { !isLoading && poker &&
                     <div className="flex items-center gap-2">
                         <span className="text-black">{ countdown > 0 ? countdown : '' }</span>
+                        <button
+                            className="rounded-md px-2 bg-blue-500 text-white py-1 ease-in duration-200 hover:bg-blue-600"
+                            onClick={() => joinGame(profile?.userUUID, room!, poker?.user[profile?.userUUID]?.isSpectator ? 'join' : 'leave')}
+                        >
+                            { poker.user[profile.userUUID]?.isSpectator ? 'Join' : 'Leave' }
+                        </button>
                         {
-                            poker.user[profile.userUUID]?.isFacilitator &&
+                            (poker.user[profile.userUUID]?.isFacilitator || poker.option.allowOthersToDeleteEstimates) &&
                             <button
-                                className="rounded-md px-2 bg-red-500 text-black py-1 ease-in duration-200 hover:bg-red-600"
+                                className="rounded-md px-2 bg-red-500 text-white py-1 ease-in duration-200 hover:bg-red-600"
                                 onClick={() => clearUsers(room!)}
                             >
                                 Clear Users
@@ -147,11 +153,11 @@ export default function PokerRoomPage() {
                         }
                         {
                             poker.user[profile.userUUID]?.activeSessions?.length > 0 &&
-                            (poker.user[profile.userUUID]?.isFacilitator || !poker.user[profile.userUUID]?.isSpectator) &&
+                            (poker.user[profile.userUUID]?.isFacilitator || (!poker.user[profile.userUUID]?.isSpectator && poker.option.allowOthersToShowEstimates)) &&
                             <button
                                 className="rounded-md px-2 bg-green-500 text-black py-1 ease-in duration-200 hover:bg-green-600"
                                 onClick={flipCard}
-                                disabled={!openable()}
+                                disabled={!poker.isShowEstimates && !openable()}
                             >
                                 { poker.isShowEstimates ? 'Vote Next Issue' : 'Show Cards' }
                             </button>

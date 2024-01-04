@@ -66,6 +66,17 @@ export async function leavePokerRoom(userUUID: string, sessionUUID: string, room
     return await updateActiveSession(userUUID, sessionUUID, roomID, 'leave');
 }
 
+export async function joinGame(userUUID: string, roomID: string, event: 'join' | 'leave') {
+    const data: Map<boolean | null> = {
+        [`user.${userUUID}.isSpectator`]: event === 'leave',
+    }
+    if (event === 'leave') {
+        data[`user.${userUUID}.estimatePoint`] = null;
+    }
+
+    await updateDoc(pokerDoc(roomID), {...data, updatedAt: new Date()});
+}
+
 export async function clearUsers(roomID: string, userUUID?: string) {
     let userUUIDs: string[] = userUUID ? [userUUID] : [];
     const userData: Map<null | string[] | boolean> = {};
