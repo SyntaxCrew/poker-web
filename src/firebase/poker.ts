@@ -66,11 +66,25 @@ export async function leavePokerRoom(userUUID: string, sessionUUID: string, room
     return await updateActiveSession(userUUID, sessionUUID, roomID, 'leave');
 }
 
-export async function joinGame(userUUID: string, sessionUUID: string, roomID: string, event: 'join' | 'leave') {
-    const data: Map<boolean | null | FieldValue> = {
+// get poker from client instead of fetch on this layer
+export async function joinGame(poker: Poker, userUUID: string, sessionUUID: string, roomID: string, event: 'join' | 'leave') {
+    const data: Map<boolean | null | FieldValue | EstimateStatus> = {
         [`user.${userUUID}.isSpectator`]: event === 'leave',
     }
     if (event === 'leave') {
+        let isExistsUser = false;
+        for (const pokerUserUUID of Object.keys(poker.user)) {
+            if (userUUID === pokerUserUUID) {
+                continue;
+            }
+            if (!poker.user[pokerUserUUID].isSpectator && poker.user[pokerUserUUID].activeSessions?.length > 0 && poker.user[pokerUserUUID].estimatePoint != null) {
+                isExistsUser = true;
+                break;
+            }
+        }
+        if (!isExistsUser) {
+            data.estimateStatus = 'CLOSED'
+        }
         data[`user.${userUUID}.estimatePoint`] = null;
         data[`user.${userUUID}.activeSessions`] = arrayRemove(sessionUUID);
     } else {
@@ -95,13 +109,20 @@ export async function clearUsers(roomID: string, userUUID?: string) {
         userUUIDs = Object.keys(poker.user);
     } else {
         let existsUser = false;
-        for (const userUUID of Object.keys(poker.user)) {
-            if (!poker.user[userUUID].isSpectator && poker.user[userUUID].activeSessions?.length > 0) {
+        let hasVote = false;
+        for (const pokerUserUUID of Object.keys(poker.user)) {
+            if (userUUID === pokerUserUUID) {
+                continue;
+            }
+            if (!poker.user[pokerUserUUID].isSpectator && poker.user[pokerUserUUID].activeSessions?.length > 0) {
                 existsUser = true;
-                break;
+                if (poker.user[pokerUserUUID].estimatePoint != null) {
+                    hasVote = true;
+                    break;
+                }
             }
         }
-        if (!existsUser) {
+        if (!existsUser || !hasVote) {
             userData.estimateStatus = 'CLOSED';
         }
     }

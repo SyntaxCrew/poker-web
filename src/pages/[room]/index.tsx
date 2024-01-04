@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { useBeforeUnload, useNavigate, useParams } from "react-router-dom";
-import PokerLogo from '/poker.png'
+import PokerLogo from '/poker.png';
 import EstimatePointCard from "../../components/EstimatePointCard";
 import UserCard from "../../components/UserCard";
 import { clearUsers, joinGame, joinPokerRoom, leavePokerRoom, updateEstimateStatus, pokeCard } from '../../firebase/poker';
+import { getUserProfile } from '../../firebase/user';
 import { EstimateStatus, Poker } from "../../models/poker";
 import { UserProfile } from '../../models/user';
-import { getUserProfile } from '../../firebase/user';
 
 export default function PokerRoomPage() {
     const { room } = useParams();
@@ -43,12 +43,12 @@ export default function PokerRoomPage() {
                         try {
                             const poker = data.data();
                             if (!poker) {
-                                throw Error('poker not found')
+                                throw Error('poker not found');
                             }
                             setPoker(poker);
                             for (const userUUID of Object.keys(poker.user)) {
                                 if (userProfile.userUUID === userUUID) {
-                                    setCurrentEstimatePoint(poker.user[userUUID].estimatePoint)
+                                    setCurrentEstimatePoint(poker.user[userUUID].estimatePoint);
                                     break;
                                 }
                             }
@@ -142,6 +142,8 @@ export default function PokerRoomPage() {
         await updateEstimateStatus(room!, estimateStatus);
     }
 
+    const displayButton = (isAllowOption: boolean) => isUsersExists() && poker && (poker.user[profile.userUUID]?.isFacilitator || (isAllowOption && !poker.user[profile.userUUID]?.isSpectator && poker.user[profile.userUUID]?.activeSessions?.length > 0))
+
     return (
         <>
             <div className="flex items-center justify-between px-2 sm:px-4 h-20 bg-blue-200">
@@ -154,34 +156,30 @@ export default function PokerRoomPage() {
                 { !isLoading && poker &&
                     <div className="flex items-center gap-2">
                         <span className="text-black">{ countdown > 0 ? countdown : '' }</span>
+
                         <button
                             className="rounded-md px-2 bg-blue-500 text-white py-1 ease-in duration-200 hover:bg-blue-600"
                             disabled={poker.estimateStatus === 'OPENING'}
-                            onClick={() => joinGame(profile.userUUID, profile.sessionUUID, room!, poker.user[profile.userUUID]?.isSpectator ? 'join' : 'leave')}
+                            onClick={() => joinGame(poker, profile.userUUID, profile.sessionUUID, room!, poker.user[profile.userUUID]?.isSpectator ? 'join' : 'leave')}
                         >
                             { poker.user[profile.userUUID]?.isSpectator ? 'Join' : 'Leave' }
                         </button>
-                        {
-                            isUsersExists() && (poker.user[profile.userUUID]?.isFacilitator || (poker.option.allowOthersToDeleteEstimates && !poker.user[profile.userUUID]?.isSpectator && poker.user[profile.userUUID]?.activeSessions?.length > 0)) &&
-                            <button
-                                className="rounded-md px-2 bg-red-500 text-white py-1 ease-in duration-200 hover:bg-red-600"
-                                disabled={poker.estimateStatus === 'OPENING'}
-                                onClick={() => isUsersExists() && clearUsers(room!)}
-                            >
-                                Clear Users
-                            </button>
-                        }
-                        {
-                            poker.user[profile.userUUID]?.activeSessions?.length > 0 &&
-                            (poker.user[profile.userUUID]?.isFacilitator || (!poker.user[profile.userUUID]?.isSpectator && poker.option.allowOthersToShowEstimates)) &&
-                            <button
-                                className="rounded-md px-2 bg-green-500 text-black py-1 ease-in duration-200 hover:bg-green-600"
-                                onClick={flipCard}
-                                disabled={poker.estimateStatus === 'CLOSED' && !isUsersExists(true)}
-                            >
-                                { poker.estimateStatus === 'OPENED' ? 'Vote Next Issue' : 'Show Cards' }
-                            </button>
-                        }
+
+                        {displayButton(poker.option.allowOthersToDeleteEstimates) && <button
+                            className="rounded-md px-2 bg-red-500 text-white py-1 ease-in duration-200 hover:bg-red-600"
+                            disabled={poker.estimateStatus === 'OPENING'}
+                            onClick={() => isUsersExists() && clearUsers(room!)}
+                        >
+                            Clear Users
+                        </button>}
+
+                        {displayButton(poker.option.allowOthersToShowEstimates) && <button
+                            className="rounded-md px-2 bg-green-500 text-black py-1 ease-in duration-200 hover:bg-green-600"
+                            onClick={flipCard}
+                            disabled={poker.estimateStatus === 'CLOSED' && !isUsersExists(true)}
+                        >
+                            { poker.estimateStatus === 'OPENED' ? 'Vote Next Issue' : 'Show Cards' }
+                        </button>}
                     </div>
                 }
             </div>
@@ -203,7 +201,7 @@ export default function PokerRoomPage() {
                                             displayName={poker.user[userUUID].displayName}
                                             isShowEstimates={poker.estimateStatus === 'OPENED'}
                                             estimatePoint={poker.user[userUUID].estimatePoint}
-                                            allowOthersToDeleteEstimates={(poker.user[profile.userUUID]?.isFacilitator || poker.option.allowOthersToDeleteEstimates) && userUUID !== profile.userUUID}
+                                            allowOthersToDeleteEstimates={poker.estimateStatus !== 'OPENING' && (poker.user[profile.userUUID]?.isFacilitator || poker.option.allowOthersToDeleteEstimates) && userUUID !== profile.userUUID}
                                         />
                                     )
                                 })
@@ -221,7 +219,7 @@ export default function PokerRoomPage() {
                                     key={estimatePoint}
                                     estimatePoint={estimatePoint}
                                     currentPoint={currentEstimatePoint}
-                                    disabled={countdown > 0}
+                                    disabled={poker?.estimateStatus !== 'CLOSED' || countdown > 0}
                                     onSelect={(point) => pokeCard(profile.userUUID, room!, point)}
                                 />
                             )

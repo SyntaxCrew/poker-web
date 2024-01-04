@@ -23,8 +23,6 @@ export interface PokerOption {
     allowOthersToShowEstimates: boolean
     allowOthersToDeleteEstimates: boolean
     allowOthersToClearUsers: boolean
-    showTimer: boolean
     autoRevealCards: boolean
     showAverage: boolean
-    showMedian: boolean
 }
