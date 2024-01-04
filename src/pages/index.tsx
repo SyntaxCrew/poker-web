@@ -14,7 +14,6 @@ export default function HomePage() {
         allowOthersToClearUsers: false,
         allowOthersToDeleteEstimates: false,
         allowOthersToShowEstimates: true,
-        allowEditEstimateAfterShowEstimate: false,
         autoRevealCards: true,
         estimateOptions: ['0', '1', '2', '3', '5', '8', '13', '21', '34', '55', '89', '?', '☕'],
         showAverage: true,

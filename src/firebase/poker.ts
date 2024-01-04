@@ -66,6 +66,40 @@ export async function leavePokerRoom(userUUID: string, sessionUUID: string, room
     return await updateActiveSession(userUUID, sessionUUID, roomID, 'leave');
 }
 
+export async function clearUsers(roomID: string, userUUID?: string) {
+    let userUUIDs: string[] = userUUID ? [userUUID] : [];
+    const userData: Map<null | string[] | boolean> = {};
+
+    const docSnap = await getDoc(pokerDoc(roomID));
+    const poker = docSnap.data();
+    if (!poker) {
+        return;
+    }
+
+    if (!userUUID) {
+        userData.isShowEstimates = false;
+        userUUIDs = Object.keys(poker.user);
+    } else {
+        let existsUser = false;
+        for (const userUUID of Object.keys(poker.user)) {
+            if (!poker.user[userUUID].isSpectator && poker.user[userUUID].activeSessions?.length > 0) {
+                existsUser = true;
+                break;
+            }
+        }
+        if (!existsUser) {
+            userData.isShowEstimates = false;
+        }
+    }
+
+    for (const userUUID of userUUIDs) {
+        userData[`user.${userUUID}.estimatePoint`] = null;
+        userData[`user.${userUUID}.isSpectator`] = true;
+    }
+
+    await updateDoc(pokerDoc(roomID), {...userData, updatedAt: new Date()});
+}
+
 export async function pokeCard(userUUID: string, roomID: string, estimatePoint?: string) {
     await updateDoc(pokerDoc(roomID), {
         [`user.${userUUID}.estimatePoint`]: estimatePoint ?? null,

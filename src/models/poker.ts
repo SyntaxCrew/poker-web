@@ -21,7 +21,6 @@ export interface PokerOption {
     allowOthersToShowEstimates: boolean
     allowOthersToDeleteEstimates: boolean
     allowOthersToClearUsers: boolean
-    allowEditEstimateAfterShowEstimate: boolean
     showTimer: boolean
     autoRevealCards: boolean // Show cards automatically after everyone voted.
     showAverage: boolean
