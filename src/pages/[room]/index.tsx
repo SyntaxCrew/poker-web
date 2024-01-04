@@ -122,6 +122,18 @@ export default function PokerRoomPage() {
         return false;
     }
 
+    const isUsersExists = () => {
+        if (!poker) {
+            return false;
+        }
+        for (const userUUID of Object.keys(poker.user)) {
+            if (!poker.user[userUUID].isSpectator && poker.user[userUUID].activeSessions?.length > 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     const flipCard = async() => {
         if (!poker) {
             return;
@@ -164,7 +176,7 @@ export default function PokerRoomPage() {
                             (poker.user[profile.userUUID]?.isFacilitator || poker.option.allowOthersToDeleteEstimates) &&
                             <button
                                 className="rounded-md px-2 bg-red-500 text-white py-1 ease-in duration-200 hover:bg-red-600"
-                                onClick={() => clearUsers(room!)}
+                                onClick={() => isUsersExists() && clearUsers(room!)}
                             >
                                 Clear Users
                             </button>
