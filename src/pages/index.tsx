@@ -17,8 +17,6 @@ export default function HomePage() {
         autoRevealCards: true,
         estimateOptions: ['0', '1', '2', '3', '5', '8', '13', '21', '34', '55', '89', '?', '☕'],
         showAverage: true,
-        showMedian: true,
-        showTimer: false,
     });
 
     useEffect(() => {

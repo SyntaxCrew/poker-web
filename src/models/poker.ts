@@ -4,11 +4,12 @@ import { Map } from "./generic"
 export type EstimateStatus = 'CLOSED' | 'OPENED' | 'OPENING'
 
 export interface Poker {
+    session: string
     issueName?: string
     estimateStatus: EstimateStatus
     user: Map<PokerUser>
     option: PokerOption
-    histories?: PokerHistory[]
+    history?: Map<PokerHistory>
     votingAt?: Timestamp
     createdAt: Date
     updatedAt?: Date
