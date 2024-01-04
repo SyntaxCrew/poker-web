@@ -1,7 +1,7 @@
-import { DocumentData, onSnapshot, doc, setDoc, getDoc, DocumentSnapshot, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
+import { DocumentData, onSnapshot, doc, setDoc, getDoc, DocumentSnapshot, updateDoc, arrayUnion, arrayRemove, FieldValue } from "firebase/firestore";
 import firestore from "./firestore";
 import { converter } from "../models/firestore";
-import { Poker, PokerOption } from "../models/poker";
+import { EstimateStatus, Poker, PokerOption } from "../models/poker";
 import { randomString } from "../utils/generator";
 import { Map } from "../models/generic";
 
@@ -46,7 +46,7 @@ export async function joinPokerRoom(req: {
 export async function createPokerRoom(userUUID: string, displayName: string, option: PokerOption): Promise<string> {
     const roomID = randomString(20);
     const poker: Poker = {
-        isShowEstimates: false,
+        estimateStatus: 'CLOSED',
         user: {
             [userUUID]: {
                 displayName,
@@ -66,12 +66,15 @@ export async function leavePokerRoom(userUUID: string, sessionUUID: string, room
     return await updateActiveSession(userUUID, sessionUUID, roomID, 'leave');
 }
 
-export async function joinGame(userUUID: string, roomID: string, event: 'join' | 'leave') {
-    const data: Map<boolean | null> = {
+export async function joinGame(userUUID: string, sessionUUID: string, roomID: string, event: 'join' | 'leave') {
+    const data: Map<boolean | null | FieldValue> = {
         [`user.${userUUID}.isSpectator`]: event === 'leave',
     }
     if (event === 'leave') {
         data[`user.${userUUID}.estimatePoint`] = null;
+        data[`user.${userUUID}.activeSessions`] = arrayRemove(sessionUUID);
+    } else {
+        data[`user.${userUUID}.activeSessions`] = arrayUnion(sessionUUID);
     }
 
     await updateDoc(pokerDoc(roomID), {...data, updatedAt: new Date()});
@@ -79,7 +82,7 @@ export async function joinGame(userUUID: string, roomID: string, event: 'join' |
 
 export async function clearUsers(roomID: string, userUUID?: string) {
     let userUUIDs: string[] = userUUID ? [userUUID] : [];
-    const userData: Map<null | string[] | boolean> = {};
+    const userData: Map<null | string[] | boolean | EstimateStatus> = {};
 
     const docSnap = await getDoc(pokerDoc(roomID));
     const poker = docSnap.data();
@@ -88,7 +91,7 @@ export async function clearUsers(roomID: string, userUUID?: string) {
     }
 
     if (!userUUID) {
-        userData.isShowEstimates = false;
+        userData.estimateStatus = 'CLOSED';
         userUUIDs = Object.keys(poker.user);
     } else {
         let existsUser = false;
@@ -99,12 +102,13 @@ export async function clearUsers(roomID: string, userUUID?: string) {
             }
         }
         if (!existsUser) {
-            userData.isShowEstimates = false;
+            userData.estimateStatus = 'CLOSED';
         }
     }
 
     for (const userUUID of userUUIDs) {
         userData[`user.${userUUID}.estimatePoint`] = null;
+        userData[`user.${userUUID}.activeSessions`] = [];
         userData[`user.${userUUID}.isSpectator`] = true;
     }
 
@@ -118,12 +122,12 @@ export async function pokeCard(userUUID: string, roomID: string, estimatePoint?:
     });
 }
 
-export async function openCard(roomID: string, isShowEstimates: boolean) {
+export async function updateEstimateStatus(roomID: string, estimateStatus: EstimateStatus) {
     let data = {
-        isShowEstimates,
+        estimateStatus,
         updatedAt: new Date(),
     };
-    if (!isShowEstimates) {
+    if (estimateStatus === 'CLOSED') {
         const docSnap = await getDoc(pokerDoc(roomID));
         const poker = docSnap.data();
         if (poker) {

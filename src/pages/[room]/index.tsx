@@ -3,8 +3,8 @@ import { useBeforeUnload, useNavigate, useParams } from "react-router-dom";
 import PokerLogo from '/poker.png'
 import EstimatePointCard from "../../components/EstimatePointCard";
 import UserCard from "../../components/UserCard";
-import { clearUsers, joinGame, joinPokerRoom, leavePokerRoom, openCard, pokeCard } from '../../firebase/poker';
-import { Poker } from "../../models/poker";
+import { clearUsers, joinGame, joinPokerRoom, leavePokerRoom, updateEstimateStatus, pokeCard } from '../../firebase/poker';
+import { EstimateStatus, Poker } from "../../models/poker";
 import { UserProfile } from '../../models/user';
 import { getUserProfile } from '../../repository/user';
 
@@ -50,6 +50,11 @@ export default function PokerRoomPage() {
                                 }
                             }
 
+                            // set loading screen
+                            if (isLoading) {
+                                setLoading(false);
+                            }
+
                             // set timer countdown
                             if (poker.option.autoRevealCards) {
                                 let isVoteAll = true;
@@ -66,14 +71,15 @@ export default function PokerRoomPage() {
                                         }
                                     }
                                 }
-                                if (hasUser && isVoteAll && !poker.isShowEstimates) {
-                                    setCountdown(2);
+                                if (hasUser && isVoteAll && poker.estimateStatus === 'CLOSED') {
+                                    updateEstimateStatus(room!, 'OPENING');
                                 }
                             }
 
-                            // set loading screen
-                            if (isLoading) {
-                                setLoading(false);
+                            if (poker.estimateStatus === 'OPENING') {
+                                setCountdown(2);
+                            } else if (poker.estimateStatus === 'OPENED') {
+                                setCountdown(0);
                             }
 
                         } catch (error) {
@@ -96,8 +102,8 @@ export default function PokerRoomPage() {
         if (typeof timer == "number") {
             return () => clearInterval(timer);
         }
-        if (openable()) {
-            openCard(room!, true);
+        if (poker?.estimateStatus !== 'OPENED' && openable()) {
+            updateEstimateStatus(room!, 'OPENED');
         }
     }, [countdown]);
 
@@ -117,11 +123,20 @@ export default function PokerRoomPage() {
         if (!poker) {
             return;
         }
-        if (!poker.isShowEstimates) {
-            setCountdown(countdown === 0 ? 2 : 0);
-            return;
+
+        let estimateStatus!: EstimateStatus;
+        switch (poker.estimateStatus) {
+            case 'CLOSED':
+                estimateStatus = 'OPENING';
+                break;
+            case 'OPENING':
+                estimateStatus = 'OPENED';
+                break;
+            case 'OPENED':
+                estimateStatus = 'CLOSED';
+                break;
         }
-        await openCard(room!, !poker.isShowEstimates);
+        await updateEstimateStatus(room!, estimateStatus);
     }
 
     return (
@@ -138,7 +153,7 @@ export default function PokerRoomPage() {
                         <span className="text-black">{ countdown > 0 ? countdown : '' }</span>
                         <button
                             className="rounded-md px-2 bg-blue-500 text-white py-1 ease-in duration-200 hover:bg-blue-600"
-                            onClick={() => joinGame(profile?.userUUID, room!, poker?.user[profile?.userUUID]?.isSpectator ? 'join' : 'leave')}
+                            onClick={() => joinGame(profile.userUUID, profile.sessionUUID, room!, poker?.user[profile.userUUID]?.isSpectator ? 'join' : 'leave')}
                         >
                             { poker.user[profile.userUUID]?.isSpectator ? 'Join' : 'Leave' }
                         </button>
@@ -157,9 +172,9 @@ export default function PokerRoomPage() {
                             <button
                                 className="rounded-md px-2 bg-green-500 text-black py-1 ease-in duration-200 hover:bg-green-600"
                                 onClick={flipCard}
-                                disabled={!poker.isShowEstimates && !openable()}
+                                disabled={poker.estimateStatus === 'CLOSED' && !openable()}
                             >
-                                { poker.isShowEstimates ? 'Vote Next Issue' : 'Show Cards' }
+                                { poker.estimateStatus === 'OPENED' ? 'Vote Next Issue' : 'Show Cards' }
                             </button>
                         }
                     </div>
@@ -173,13 +188,13 @@ export default function PokerRoomPage() {
                             Object.
                                 keys(poker.user).
                                 sort((a, b) => poker.user[a].displayName.localeCompare(poker.user[b].displayName)).
-                                filter(userUUID => !poker.user[userUUID].isSpectator && ((poker.user[userUUID].estimatePoint != null && poker.isShowEstimates) || poker.user[userUUID].activeSessions?.length)).
+                                filter(userUUID => !poker.user[userUUID].isSpectator && ((poker.user[userUUID].estimatePoint != null && poker.estimateStatus !== 'CLOSED') || poker.user[userUUID].activeSessions?.length)).
                                 map(userUUID => {
                                     return (
                                         <UserCard
                                             key={userUUID}
                                             displayName={poker.user[userUUID].displayName}
-                                            isShowEstimates={poker.isShowEstimates}
+                                            isShowEstimates={poker.estimateStatus === 'OPENED'}
                                             estimatePoint={poker.user[userUUID].estimatePoint}
                                         />
                                     )
@@ -190,7 +205,7 @@ export default function PokerRoomPage() {
             </div>
 
             <div className="absolute z-10 bottom-0 w-full p-2 sm:p-4 bg-yellow-200">
-                {poker && !poker?.isShowEstimates && poker.user[profile.userUUID]?.activeSessions?.length > 0 && !poker.user[profile.userUUID]?.isSpectator &&
+                {poker && poker?.estimateStatus !== 'OPENED' && poker.user[profile.userUUID]?.activeSessions?.length > 0 && !poker.user[profile.userUUID]?.isSpectator &&
                     <div className="flex flex-wrap justify-center items-center gap-3">
                         {poker?.option.estimateOptions.map(estimatePoint => {
                             return (
@@ -205,7 +220,7 @@ export default function PokerRoomPage() {
                         })}
                     </div>
                 }
-                {poker?.isShowEstimates && <div className="text-black">RESULT VOTES</div>}
+                {poker?.estimateStatus === 'OPENED' && <div className="text-black">RESULT VOTES</div>}
             </div>
         </>
     );

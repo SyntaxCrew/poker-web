@@ -1,7 +1,9 @@
 import { Map } from "./generic"
 
+export type EstimateStatus = 'CLOSED' | 'OPENED' | 'OPENING'
+
 export interface Poker {
-    isShowEstimates: boolean
+    estimateStatus: EstimateStatus
     user: Map<PokerUser>
     option: PokerOption
     createdAt: Date
@@ -22,7 +24,7 @@ export interface PokerOption {
     allowOthersToDeleteEstimates: boolean
     allowOthersToClearUsers: boolean
     showTimer: boolean
-    autoRevealCards: boolean // Show cards automatically after everyone voted.
+    autoRevealCards: boolean
     showAverage: boolean
     showMedian: boolean
 }
