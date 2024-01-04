@@ -105,29 +105,17 @@ export default function PokerRoomPage() {
         if (typeof timer == "number") {
             return () => clearInterval(timer);
         }
-        if (poker?.estimateStatus !== 'OPENED' && openable()) {
+        if (poker?.estimateStatus !== 'OPENED' && isUsersExists(true)) {
             updateEstimateStatus(room!, 'OPENED');
         }
     }, [countdown]);
 
-    const openable = () => {
+    const isUsersExists = (isPoked?: boolean) => {
         if (!poker) {
             return false;
         }
         for (const userUUID of Object.keys(poker.user)) {
-            if (!poker.user[userUUID].isSpectator && poker.user[userUUID].estimatePoint != null && poker.user[userUUID].activeSessions?.length > 0) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    const isUsersExists = () => {
-        if (!poker) {
-            return false;
-        }
-        for (const userUUID of Object.keys(poker.user)) {
-            if (!poker.user[userUUID].isSpectator && poker.user[userUUID].activeSessions?.length > 0) {
+            if (!poker.user[userUUID].isSpectator && poker.user[userUUID].activeSessions?.length > 0 && (!isPoked || poker.user[userUUID].estimatePoint != null)) {
                 return true;
             }
         }
@@ -168,7 +156,8 @@ export default function PokerRoomPage() {
                         <span className="text-black">{ countdown > 0 ? countdown : '' }</span>
                         <button
                             className="rounded-md px-2 bg-blue-500 text-white py-1 ease-in duration-200 hover:bg-blue-600"
-                            onClick={() => joinGame(profile.userUUID, profile.sessionUUID, room!, poker?.user[profile.userUUID]?.isSpectator ? 'join' : 'leave')}
+                            disabled={poker.estimateStatus === 'OPENING'}
+                            onClick={() => joinGame(profile.userUUID, profile.sessionUUID, room!, poker.user[profile.userUUID]?.isSpectator ? 'join' : 'leave')}
                         >
                             { poker.user[profile.userUUID]?.isSpectator ? 'Join' : 'Leave' }
                         </button>
@@ -176,6 +165,7 @@ export default function PokerRoomPage() {
                             isUsersExists() && (poker.user[profile.userUUID]?.isFacilitator || (poker.option.allowOthersToDeleteEstimates && !poker.user[profile.userUUID]?.isSpectator && poker.user[profile.userUUID]?.activeSessions?.length > 0)) &&
                             <button
                                 className="rounded-md px-2 bg-red-500 text-white py-1 ease-in duration-200 hover:bg-red-600"
+                                disabled={poker.estimateStatus === 'OPENING'}
                                 onClick={() => isUsersExists() && clearUsers(room!)}
                             >
                                 Clear Users
@@ -187,7 +177,7 @@ export default function PokerRoomPage() {
                             <button
                                 className="rounded-md px-2 bg-green-500 text-black py-1 ease-in duration-200 hover:bg-green-600"
                                 onClick={flipCard}
-                                disabled={poker.estimateStatus === 'CLOSED' && !openable()}
+                                disabled={poker.estimateStatus === 'CLOSED' && !isUsersExists(true)}
                             >
                                 { poker.estimateStatus === 'OPENED' ? 'Vote Next Issue' : 'Show Cards' }
                             </button>
