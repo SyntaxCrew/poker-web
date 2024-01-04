@@ -183,7 +183,7 @@ export default function PokerRoomPage() {
 
             <div className="p-2 sm:p-4">
                 {!isLoading && poker && (
-                    <div className="flex gap-2 flex-wrap w-fit">
+                    <div className="flex gap-2 flex-wrap w-fit h-full justify-center items-center m-auto">
                         {
                             Object.
                                 keys(poker.user).
