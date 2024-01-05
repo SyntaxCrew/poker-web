@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useBeforeUnload, useNavigate, useParams } from "react-router-dom";
-import PokerLogo from '/poker.png';
+import PokerLogo from '/images/poker.png';
 import EstimatePointCard from "../../components/EstimatePointCard";
 import UserCard from "../../components/UserCard";
 import { clearUsers, joinGame, joinPokerRoom, leavePokerRoom, updateEstimateStatus, pokeCard } from '../../firebase/poker';
@@ -13,7 +13,7 @@ export default function PokerRoomPage() {
     const navigate = useNavigate();
     const [isLoading, setLoading] = useState(true);
     const [poker, setPoker] = useState<Poker>();
-    const [profile, setProfile] = useState<UserProfile>({userType: 'anonymous', userUUID: '', sessionUUID: ''});
+    const [profile, setProfile] = useState<UserProfile>({isAnonymous: true, userUUID: '', sessionUUID: ''});
     const [currentEstimatePoint, setCurrentEstimatePoint] = useState<string>();
     const [countdown, setCountdown] = useState(0);
     const [isCountingDown, setCountingDown] = useState(false);
@@ -36,7 +36,7 @@ export default function PokerRoomPage() {
                     onNotFound: () => navigate('/'),
                     onNewJoiner() {
                         return {
-                            displayName: prompt("Enter your display name!")!,
+                            displayName: userProfile.displayName || prompt("Enter your display name!")!,
                             isSpectator: false,
                         };
                     },

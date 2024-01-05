@@ -1,4 +1,4 @@
-import { DocumentData, onSnapshot, doc, setDoc, getDoc, DocumentSnapshot, updateDoc, arrayUnion, arrayRemove, FieldValue, deleteField } from "firebase/firestore";
+import { DocumentData, onSnapshot, doc, setDoc, getDoc, DocumentSnapshot, updateDoc, arrayUnion, arrayRemove, FieldValue, deleteField, Timestamp } from "firebase/firestore";
 import firestore from "./firestore";
 import { converter } from "../models/firestore";
 import { Map } from "../models/generic";
@@ -57,7 +57,7 @@ export async function createPokerRoom(userUUID: string, displayName: string, opt
             }
         },
         option,
-        createdAt: new Date(),
+        createdAt: Timestamp.fromDate(new Date()),
     }
 
     await setDoc(pokerDoc(roomID), poker);
@@ -93,7 +93,7 @@ export async function joinGame(poker: Poker, userUUID: string, sessionUUID: stri
         data[`user.${userUUID}.activeSessions`] = arrayUnion(sessionUUID);
     }
 
-    await updateDoc(pokerDoc(roomID), {...data, updatedAt: new Date()});
+    await updateDoc(pokerDoc(roomID), {...data, updatedAt: Timestamp.fromDate(new Date())});
 }
 
 export async function clearUsers(roomID: string, userUUID?: string) {
@@ -135,18 +135,18 @@ export async function clearUsers(roomID: string, userUUID?: string) {
         userData[`user.${userUUID}.isSpectator`] = true;
     }
 
-    await updateDoc(pokerDoc(roomID), {...userData, updatedAt: new Date()});
+    await updateDoc(pokerDoc(roomID), {...userData, updatedAt: Timestamp.fromDate(new Date())});
 }
 
 export async function pokeCard(userUUID: string, roomID: string, estimatePoint?: string) {
     await updateDoc(pokerDoc(roomID), {
         [`user.${userUUID}.estimatePoint`]: estimatePoint ?? null,
-        updatedAt: new Date(),
+        updatedAt: Timestamp.fromDate(new Date()),
     });
 }
 
 export async function updateEstimateStatus(roomID: string, estimateStatus: EstimateStatus) {
-    const now = new Date();
+    const now = Timestamp.fromDate(new Date());
     let data = {
         estimateStatus,
         updatedAt: now,
@@ -160,7 +160,7 @@ export async function updateEstimateStatus(roomID: string, estimateStatus: Estim
                 return;
             }
 
-            const userData: Map<null | FieldValue | Date | PokerHistory | string> = {};
+            const userData: Map<null | FieldValue | Timestamp | PokerHistory | string> = {};
             if (estimateStatus === 'CLOSED') {
                 userData.issueName = deleteField();
                 userData.votingAt = now;
@@ -176,10 +176,10 @@ export async function updateEstimateStatus(roomID: string, estimateStatus: Estim
                     total: 0,
                     voted: 0,
                     playerResult: [],
-                    result: '',
+                    result: '', // average or median or mode
                 }
                 if (poker.votingAt) {
-                    pokerHistory.duration = timeDiffString(poker.votingAt.toDate(), now)
+                    pokerHistory.duration = timeDiffString(poker.votingAt.toDate(), now.toDate())
                 }
                 for (const userUUID of Object.keys(poker.user)) {
                     if (!poker.user[userUUID].isSpectator && (poker.user[userUUID].activeSessions?.length > 0 || poker.user[userUUID].estimatePoint != null)) {
@@ -204,7 +204,7 @@ export async function updateEstimateStatus(roomID: string, estimateStatus: Estim
 async function updateActiveSession(userUUID: string, sessionUUID: string, roomID: string, event: 'join' | 'leave') {
     await updateDoc(pokerDoc(roomID), {
         [`user.${userUUID}.activeSessions`]: event === 'join' ? arrayUnion(sessionUUID) : arrayRemove(sessionUUID),
-        updatedAt: new Date(),
+        updatedAt: Timestamp.fromDate(new Date()),
     });
 }
 
@@ -212,6 +212,6 @@ async function newJoiner(userUUID: string, roomID: string, displayName: string, 
     await updateDoc(pokerDoc(roomID), {
         [`user.${userUUID}.displayName`]: displayName,
         [`user.${userUUID}.isSpectator`]: isSpectator,
-        updatedAt: new Date(),
+        updatedAt: Timestamp.fromDate(new Date()),
     });
 }

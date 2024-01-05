@@ -11,8 +11,8 @@ export interface Poker {
     option: PokerOption
     history?: Map<PokerHistory>
     votingAt?: Timestamp
-    createdAt: Date
-    updatedAt?: Date
+    createdAt: Timestamp
+    updatedAt?: Timestamp
 }
 
 export interface PokerUser {
@@ -29,20 +29,24 @@ export interface PokerOption {
     allowOthersToDeleteEstimates: boolean
     allowOthersToClearUsers: boolean
     autoRevealCards: boolean
-    showAverage: boolean
+    showAverage: boolean // ❌
 }
 
 export interface PokerHistory {
     issueName?: string
-    result: string
-    duration?: string
-    date: Date
+    result: string // average | median | mode
+    duration?: string // 00:05
+    date: Timestamp // 4 Jan, 21:31
     voted: number
-    total: number
-    playerResult: PokerHistoryPlayerResult[]
+    total: number // Voted / total => 2/2
+    playerResult: PokerHistoryPlayerResult[] // test (2), test2 (☕), test3 (3)
 }
 
 export interface PokerHistoryPlayerResult {
     displayName: string
     estimatePoint: string
+}
+
+export interface PokerIssue {
+
 }
