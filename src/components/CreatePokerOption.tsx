@@ -1,5 +1,5 @@
 import { ChangeEvent, useEffect, useState } from "react";
-import { Button, Collapse, Dialog, DialogActions, DialogContent, Divider, MenuItem, Select, Switch, TextField } from "@mui/material";
+import { Button, Collapse, Dialog, DialogActions, DialogContent, Divider, MenuItem, Switch, TextField } from "@mui/material";
 import { CreatePokerOptionDialog, PokerOption } from "../models/poker";
 import { setValue } from "../utils/input";
 
@@ -75,6 +75,9 @@ export default function CreatePokerOption(props: {isOpen: boolean, onSubmit: (re
     ]
 
     function onSubmit() {
+        if (displayName.trim().length === 0 || roomName.trim().length === 0) {
+            return;
+        }
         props.onSubmit({displayName: displayName.trim(), isSpectator, option: {...pokerOption, estimateOptions: estimateOptions[estimateOptionIndex].deckValues}, roomName: roomName.trim()})
     }
 
@@ -109,13 +112,13 @@ export default function CreatePokerOption(props: {isOpen: boolean, onSubmit: (re
                     value={roomName}
                     onChange={setValue(setRoomName)}
                 />
-                <Select value={estimateOptionIndex} onChange={e => setEstimateOptionIndex(Number(e.target.value))}>
+                <TextField select label="Voting system" value={estimateOptionIndex} onChange={e => setEstimateOptionIndex(Number(e.target.value))}>
                     {estimateOptions.map((estimate, index) => {
                         return (
                             <MenuItem key={index} value={index}>{ `${estimate.deckName} ( ${estimate.deckValues.join(', ')} )` }</MenuItem>
                         );
                     })}
-                </Select>
+                </TextField>
 
                 {!isShowCollapse && <div className="text-blue-500 hover:text-blue-600 cursor-pointer -mb-4" onClick={() => setShowCollapse(true)}>Show advanced settings...</div>}
                 <Collapse in={isShowCollapse} >
@@ -135,7 +138,7 @@ export default function CreatePokerOption(props: {isOpen: boolean, onSubmit: (re
             <Divider></Divider>
             <DialogActions sx={{padding: '1rem'}}>
                 <Button variant="contained" color="error" onClick={onClose}>Cancel</Button>
-                <Button variant="contained" color="success" onClick={onSubmit} disabled={displayName.length === 0 || roomName.length === 0}>Create Room</Button>
+                <Button variant="contained" color="success" onClick={onSubmit} disabled={displayName.trim().length === 0 || roomName.trim().length === 0}>Create Room</Button>
             </DialogActions>
         </Dialog>
     )
