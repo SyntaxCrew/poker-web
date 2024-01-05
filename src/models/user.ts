@@ -4,6 +4,7 @@ export interface UserProfile {
     displayName?: string
     userUUID: string
     email?: string
+    imageURL?: string
     isAnonymous: boolean
     sessionUUID: string
 }

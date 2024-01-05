@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Button, TextField, Divider, Card } from '@mui/material';
+import ScrumPokerImg from '/images/estimation.png';
+import { signInGoogle, signout } from '../firebase/authentication';
 import { createPokerRoom, isExistsPokerRoom } from '../firebase/poker';
 import { getUserProfile } from '../firebase/user';
+import { PokerOption } from '../models/poker';
 import { UserProfile } from '../models/user';
 import { pressEnter } from '../utils/input';
-import { PokerOption } from '../models/poker';
-import { signInGoogle, signout } from '../firebase/authentication';
-import GoogleIcon from '/images/google-icon.png';
+import GoogleButton from '../components/GoogleButton';
+import LoadingScreen from '../components/LoadingScreen';
 
 export default function HomePage() {
     const navigate = useNavigate();
@@ -26,8 +29,8 @@ export default function HomePage() {
         const user = await getUserProfile();
         if (user) {
             setProfile(user);
-            setLoading(false);
         }
+        setLoading(false);
     }
 
     useEffect(() => {
@@ -69,24 +72,42 @@ export default function HomePage() {
 
     return (
         <>
+            <LoadingScreen isLoading={isLoading} />
             <div className="w-screen h-screen flex overflow-y-auto">
-                <div className="w-full max-[900px]:bg-[var(--primary-color)] dark:max-[900px]:bg-gray-900 min-[901px]:bg-gray-200 dark:min-[901px]:bg-gray-900 p-4">
+                <div className="w-full bg-white px-6 max-[900px]:hidden" id="{page}-logo">
                     <div className="relative top-1/2 -translate-y-1/2 overflow-y-auto">
-                        <div className="w-fit m-auto rounded-md bg-black text-white p-4">
-                            <h2 className="text-center mb-2">Poker</h2>
-                            <div className="flex gap-2">
-                                <input type="text" className='w-full rounded-md px-4' placeholder='Enter Room Number' onChange={e => setRoomID(e.target.value)} onKeyDown={pressEnter(joinRoom)} />
-                                <button className='rounded-md px-2 bg-blue-500 text-black py-1 ease-in duration-200 hover:bg-blue-600' onClick={joinRoom}>Join</button>
+                        <img className="m-auto" src={ScrumPokerImg} alt="Scrum Poker" />
+                    </div>
+                </div>
+                <div className="w-full max-[900px]:bg-blue-400 min-[901px]:bg-blue-200 p-4">
+                    <div className="relative top-1/2 -translate-y-1/2 overflow-y-auto">
+                        <Card className="w-96 max-w-fit m-auto rounded-md !bg-white text-black p-4 flex flex-col gap-4">
+                            <div className="text-center text-3xl">Poker</div>
+                            <div className="flex gap-4">
+                                <TextField
+                                    size='medium'
+                                    className='w-full rounded-md bg-white px-4'
+                                    placeholder='Enter Room Number'
+                                    label="Room Number"
+                                    variant="outlined"
+                                    onChange={e => setRoomID(e.target.value)}
+                                    onKeyDown={pressEnter(joinRoom)}
+                                    disabled={isLoading}
+                                />
+                                <Button
+                                    variant='contained'
+                                    size='medium'
+                                    className='rounded-md px-2 bg-blue-500 text-black py-1 ease-in duration-200 transition-colors hover:bg-blue-600'
+                                    onClick={joinRoom}
+                                    disabled={isLoading}
+                                >
+                                    Join
+                                </Button>
                             </div>
-                            <button className='mt-2 w-full rounded-md px-2 bg-green-500 text-black py-1 ease-in duration-200 hover:bg-green-600' onClick={createRoom}>Create Instant Room</button>
-                            {!isLoading && profile.isAnonymous && <button className="w-full rounded-md p-2 mt-2 !bg-white !text-black !border !border-gray-300 drop-shadow-sm hover:!bg-gray-300 ease-in duration-200" onClick={signInWithGoogle}>
-                                <div className="flex items-center justify-center">
-                                    <img src={GoogleIcon} alt="Google Icon" className="w-6 h-6" />
-                                    <span className="ml-4">Sign in with Google</span>
-                                </div>
-                            </button>}
-                            {!isLoading && !profile.isAnonymous && <button className='mt-2 w-full rounded-md px-2 bg-red-500 text-black py-1 ease-in duration-200 hover:bg-red-600' onClick={signOut}>Signout</button>}
-                        </div>
+                            <Button variant='contained' size="large" className="w-full !bg-green-600 ease-in duration-200 transition-colors hover:!bg-green-700" onClick={createRoom} disabled={isLoading}>New game</Button>
+                            <Divider></Divider>
+                            <GoogleButton profile={profile} onSignin={signInWithGoogle} onSignout={signOut} disabled={isLoading} />
+                        </Card>
                     </div>
                 </div>
             </div>

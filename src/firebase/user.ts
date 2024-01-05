@@ -34,6 +34,7 @@ export async function getUserProfile(): Promise<UserProfile | undefined> {
                 displayName: user.displayName,
                 isAnonymous: false,
                 sessionUUID: randomString(20),
+                imageURL: auth.currentUser.photoURL || undefined,
             };
         }
     }
