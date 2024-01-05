@@ -1,29 +1,27 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, TextField, Divider, Card } from '@mui/material';
+import { Button, TextField, Divider, Card, Box, CircularProgress } from '@mui/material';
 import ScrumPokerImg from '/images/estimation.png';
+import Alert from '../components/Alert';
+import CreatePokerOption from '../components/CreatePokerOption';
+import GoogleButton from '../components/GoogleButton';
+import LoadingScreen from '../components/LoadingScreen';
 import { signInGoogle, signout } from '../firebase/authentication';
 import { createPokerRoom, isExistsPokerRoom } from '../firebase/poker';
 import { getUserProfile } from '../firebase/user';
-import { PokerOption } from '../models/poker';
 import { UserProfile } from '../models/user';
-import { pressEnter } from '../utils/input';
-import GoogleButton from '../components/GoogleButton';
-import LoadingScreen from '../components/LoadingScreen';
+import { CreatePokerOptionDialog } from '../models/poker';
+import { pressEnter, setValue } from '../utils/input';
 
 export default function HomePage() {
     const navigate = useNavigate();
+
     const [roomID, setRoomID] = useState('');
     const [profile, setProfile] = useState<UserProfile>({isAnonymous: true, userUUID: '', sessionUUID: ''});
     const [isLoading, setLoading] = useState(true);
-    const [pokerOption] = useState<PokerOption>({
-        allowOthersToClearUsers: false,
-        allowOthersToDeleteEstimates: false,
-        allowOthersToShowEstimates: true,
-        autoRevealCards: true,
-        estimateOptions: ['0', '1', '2', '3', '5', '8', '13', '21', '34', '55', '89', '?', '☕'],
-        showAverage: true,
-    });
+    const [isFindRoom, setFindRoom] = useState(false);
+    const [isCreateRoom, setCreateRoom] = useState(false);
+    const [alert, setAlert] = useState<{isShow: boolean, message: string, severity: 'error' | 'success'}>({isShow: false, message: '', severity: 'error'});
 
     async function setUserProfile() {
         const user = await getUserProfile();
@@ -38,21 +36,25 @@ export default function HomePage() {
     }, []);
 
     async function joinRoom() {
+        if (!roomID) {
+            return;
+        }
+        setFindRoom(true);
         const isRoomExists = await isExistsPokerRoom(roomID);
+        setFindRoom(false);
         if (!isRoomExists) {
-            alert("NOT EXISTS");
+            setAlert({message: 'Room number is not found', severity: 'error', isShow: true});
             return;
         }
         navigate(`/${roomID}`);
     }
 
-    async function createRoom() {
-        if (profile.isAnonymous) {
-            profile.displayName = prompt("Enter your display name!") ?? '';
-        }
+    async function createRoom(req: CreatePokerOptionDialog) {
         if (profile.displayName) {
-            const roomID = await createPokerRoom(profile.userUUID, profile.displayName, pokerOption);
+            setLoading(true);
+            const roomID = await createPokerRoom(profile.userUUID, req.displayName, req.roomName, req.isSpectator, req.option);
             navigate(`/${roomID}`);
+            setLoading(false);
         }
     }
 
@@ -61,6 +63,7 @@ export default function HomePage() {
         await signInGoogle();
         await setUserProfile();
         setLoading(false);
+        setAlert({message: 'Sign in with google successfully', severity: 'success', isShow: true});
     }
 
     async function signOut() {
@@ -68,11 +71,14 @@ export default function HomePage() {
         await signout();
         await setUserProfile();
         setLoading(false);
+        setAlert({message: 'Sign out successfully', severity: 'success', isShow: true});
     }
 
     return (
         <>
             <LoadingScreen isLoading={isLoading} />
+            <Alert isShowAlert={alert.isShow} onDismiss={() => setAlert({...alert, isShow: false})} severity={alert.severity} message={alert.message} />
+
             <div className="w-screen h-screen flex overflow-y-auto">
                 <div className="w-full bg-white px-6 max-[900px]:hidden" id="{page}-logo">
                     <div className="relative top-1/2 -translate-y-1/2 overflow-y-auto">
@@ -81,7 +87,7 @@ export default function HomePage() {
                 </div>
                 <div className="w-full max-[900px]:bg-blue-400 min-[901px]:bg-blue-200 p-4">
                     <div className="relative top-1/2 -translate-y-1/2 overflow-y-auto">
-                        <Card className="w-96 max-w-fit m-auto rounded-md !bg-white text-black p-4 flex flex-col gap-4">
+                        <Card className="w-96 max-w-fit m-auto rounded-md p-4 flex flex-col gap-4">
                             <div className="text-center text-3xl">Poker</div>
                             <div className="flex gap-4">
                                 <TextField
@@ -90,27 +96,51 @@ export default function HomePage() {
                                     placeholder='Enter Room Number'
                                     label="Room Number"
                                     variant="outlined"
-                                    onChange={e => setRoomID(e.target.value)}
+                                    value={roomID}
+                                    onChange={setValue(setRoomID)}
                                     onKeyDown={pressEnter(joinRoom)}
-                                    disabled={isLoading}
+                                    disabled={isLoading || isFindRoom}
                                 />
-                                <Button
-                                    variant='contained'
-                                    size='medium'
-                                    className='rounded-md px-2 bg-blue-500 text-black py-1 ease-in duration-200 transition-colors hover:bg-blue-600'
-                                    onClick={joinRoom}
-                                    disabled={isLoading}
-                                >
-                                    Join
-                                </Button>
+                                <Box sx={{ position: 'relative' }}>
+                                    <Button
+                                        variant='contained'
+                                        size='medium'
+                                        className='h-full rounded-md px-2 py-1'
+                                        onClick={joinRoom}
+                                        color='primary'
+                                        disabled={isLoading || isFindRoom || !roomID}
+                                    >
+                                        Join
+                                    </Button>
+                                    {isFindRoom && <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-3"><CircularProgress size={24} /></div>}
+                                </Box>
                             </div>
-                            <Button variant='contained' size="large" className="w-full !bg-green-600 ease-in duration-200 transition-colors hover:!bg-green-700" onClick={createRoom} disabled={isLoading}>New game</Button>
+
+                            <Button
+                                variant='contained'
+                                size="large"
+                                color="success"
+                                className="w-full"
+                                onClick={() => setCreateRoom(true)}
+                                disabled={isLoading || isFindRoom}
+                            >
+                                New game
+                            </Button>
+
                             <Divider></Divider>
-                            <GoogleButton profile={profile} onSignin={signInWithGoogle} onSignout={signOut} disabled={isLoading} />
+
+                            <GoogleButton profile={profile} onSignin={signInWithGoogle} onSignout={signOut} disabled={isLoading || isFindRoom} />
                         </Card>
                     </div>
                 </div>
             </div>
+
+            <CreatePokerOption
+                displayName={profile.displayName}
+                isOpen={isCreateRoom}
+                onCancel={() => setCreateRoom(false)}
+                onSubmit={createRoom}
+            />
         </>
     )
 }

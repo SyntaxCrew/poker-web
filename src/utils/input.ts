@@ -1,4 +1,4 @@
-import React from "react";
+import React, { ChangeEvent, SetStateAction } from "react";
 
 export function pressEnter(callback: () => void) {
     return (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -6,4 +6,8 @@ export function pressEnter(callback: () => void) {
             callback();
         }
     }
+}
+
+export function setValue(setState: (value: SetStateAction<string>) => void) {
+    return (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setState(event.target.value)
 }

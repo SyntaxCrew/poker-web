@@ -13,10 +13,11 @@ export default function GoogleButton(props: {profile: UserProfile, onSignin: () 
         <>
             {props.profile.isAnonymous && <Button
                 variant='outlined'
-                className="w-full rounded-md p-2 !bg-white !text-black !border !border-gray-200 drop-shadow-sm hover:!bg-gray-300 ease-in duration-200 transition-colors !h-[56.69px]"
+                className="w-full rounded-md p-2 drop-shadow-sm"
                 onClick={props.onSignin}
                 size="large"
                 disabled={props.disabled}
+                sx={{backgroundColor: '#fff', color: '#000', borderColor: 'rgb(229 231 235)', height: '56.69px'}}
             >
                 <div className="flex items-center justify-center">
                     <img src={GoogleIcon} alt="Google Icon" className="w-6 h-6" />
@@ -27,9 +28,10 @@ export default function GoogleButton(props: {profile: UserProfile, onSignin: () 
             {!props.profile.isAnonymous && <div>
                 <Button
                     variant='outlined'
-                    className="flex items-center justify-between gap-4 shadow-lg hover:!bg-gray-200 !border-gray-200"
+                    className="flex items-center justify-between gap-4 shadow-lg"
                     onClick={() => setOpen(true)}
                     disabled={props.disabled}
+                    sx={{backgroundColor: '#fff', borderColor: 'rgb(229 231 235)'}}
                 >
                     {props.profile.imageURL && <img src={props.profile.imageURL} className='rounded-full w-6 h-6' alt="User image" />}
                     <div className='text-left text-black w-full overflow-hidden'>
@@ -43,7 +45,7 @@ export default function GoogleButton(props: {profile: UserProfile, onSignin: () 
                     <DialogTitle>Are you sure to signout?</DialogTitle>
                     <DialogActions>
                         <Button variant="outlined" color="error" onClick={() => setOpen(false)}>Cancel</Button>
-                        <Button variant="contained" color="success" onClick={signout}>Signout</Button>
+                        <Button variant="contained" color="error" onClick={signout}>Signout</Button>
                     </DialogActions>
                 </Dialog>
             </div>}

@@ -1,22 +1,26 @@
 import { getAuth, onAuthStateChanged, signInAnonymously, signInWithPopup, GoogleAuthProvider, signOut } from "firebase/auth";
 import app from "./firebase";
 import { signin } from "./user";
-import { User } from "../models/user";
 
 const auth = getAuth(app);
 onAuthStateChanged(auth, async (user) => {
     if (!user) {
-        await signInAnonymously(auth);
+        const userCredential = await signInAnonymously(auth);
+        await signin({
+            userUID: userCredential.user.uid,
+            isAnonymous: true,
+            isLinkGoogle: false,
+        });
+
     } else if (!user.isAnonymous) {
         if (user.providerData?.length > 0) {
-            const userData: User = {
+            await signin({
                 userUID: user.uid,
                 email: user.email || undefined,
                 displayName: user.displayName || '',
+                isAnonymous: false,
                 isLinkGoogle: user.providerData.findIndex(provider => provider.providerId === GoogleAuthProvider.PROVIDER_ID) !== -1
-            };
-
-            await signin(userData);
+            });
         }
     }
 });

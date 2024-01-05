@@ -44,9 +44,10 @@ export async function joinPokerRoom(req: {
     return onSnapshot(pokerDoc(req.roomID), req.onNext);
 }
 
-export async function createPokerRoom(userUUID: string, displayName: string, option: PokerOption): Promise<string> {
+export async function createPokerRoom(userUUID: string, displayName: string, roomName: string, isSpectator: boolean, option: PokerOption): Promise<string> {
     const roomID = randomString(20);
     const poker: Poker = {
+        roomName,
         session: randomString(20),
         estimateStatus: 'CLOSED',
         user: {
@@ -54,6 +55,7 @@ export async function createPokerRoom(userUUID: string, displayName: string, opt
                 displayName,
                 isFacilitator: true,
                 activeSessions: [],
+                isSpectator,
             }
         },
         option,
@@ -199,6 +201,14 @@ export async function updateEstimateStatus(roomID: string, estimateStatus: Estim
         }
     }
     return await updateDoc(pokerDoc(roomID), data);
+}
+
+export async function changeFacilitator(fromUserUUID: string, toUserUUID: string, roomID: string) {
+    await updateDoc(pokerDoc(roomID), {
+        [`user.${fromUserUUID}.isFacilitator`]: deleteField(),
+        [`user.${toUserUUID}.isFacilitator`]: true,
+        updatedAt: Timestamp.fromDate(new Date()),
+    });
 }
 
 async function updateActiveSession(userUUID: string, sessionUUID: string, roomID: string, event: 'join' | 'leave') {

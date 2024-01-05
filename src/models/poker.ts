@@ -5,6 +5,7 @@ export type EstimateStatus = 'CLOSED' | 'OPENED' | 'OPENING'
 
 export interface Poker {
     session: string
+    roomName: string
     issueName?: string
     estimateStatus: EstimateStatus
     user: Map<PokerUser>
@@ -29,17 +30,17 @@ export interface PokerOption {
     allowOthersToDeleteEstimates: boolean
     allowOthersToClearUsers: boolean
     autoRevealCards: boolean
-    showAverage: boolean // ❌
+    showAverage: boolean
 }
 
 export interface PokerHistory {
     issueName?: string
-    result: string // average | median | mode
-    duration?: string // 00:05
-    date: Timestamp // 4 Jan, 21:31
+    result: string
+    duration?: string
+    date: Timestamp
     voted: number
-    total: number // Voted / total => 2/2
-    playerResult: PokerHistoryPlayerResult[] // test (2), test2 (☕), test3 (3)
+    total: number
+    playerResult: PokerHistoryPlayerResult[]
 }
 
 export interface PokerHistoryPlayerResult {
@@ -47,6 +48,9 @@ export interface PokerHistoryPlayerResult {
     estimatePoint: string
 }
 
-export interface PokerIssue {
-
+export interface CreatePokerOptionDialog {
+    roomName: string
+    displayName: string
+    isSpectator: boolean
+    option: PokerOption
 }

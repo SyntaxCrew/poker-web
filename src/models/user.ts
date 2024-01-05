@@ -13,7 +13,9 @@ export interface User {
     userUID: string
     email?: string
     displayName?: string
-    isLinkGoogle?: boolean
+    isAnonymous: boolean
+    isLinkGoogle: boolean
+    imageURL?: string
     createdAt?: Timestamp
     updatedAt?: Timestamp
     lastLoginAt?: Timestamp
