@@ -1,9 +1,9 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider, TextField } from "@mui/material"
-import { UserProfile } from "../../models/user"
 import { ChangeEvent, useEffect, useRef, useState } from "react"
-import { pressEnter, setValue } from "../../utils/input";
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider, IconButton, TextField } from "@mui/material"
+import { Close, Edit } from "@mui/icons-material";
 import Avatar from "../partials/Avatar";
-import { Edit } from "@mui/icons-material";
+import { UserProfile } from "../../models/user"
+import { pressEnter, setValue } from "../../utils/input";
 
 export default function ProfileDialog(props: {open: boolean, profile: UserProfile, onSubmit?: (displayName: string, profileImage?: File) => void, onClose?: () => void}) {
     const [displayName, setDisplayName] = useState('');
@@ -38,7 +38,19 @@ export default function ProfileDialog(props: {open: boolean, profile: UserProfil
 
     return (
         <Dialog open={props.open} onClose={onClose} maxWidth='xs' fullWidth>
-            <DialogTitle>Edit your display information</DialogTitle>
+            <DialogTitle>
+                <div className="flex items-center justify-between gap-4 overflow-hidden">
+                    <div className="text-ellipsis whitespace-nowrap overflow-hidden">Edit your display information</div>
+                    <IconButton
+                        aria-label="close"
+                        color="inherit"
+                        size="small"
+                        onClick={onClose}
+                    >
+                        <Close fontSize="inherit" color="error" />
+                    </IconButton>
+                </div>
+            </DialogTitle>
 
             <Divider />
             <DialogContent>
@@ -60,7 +72,7 @@ export default function ProfileDialog(props: {open: boolean, profile: UserProfil
 
             <DialogActions>
                 <Button variant="outlined" color="error" onClick={onClose}>Cancel</Button>
-                <Button variant="contained" color="primary" onClick={() => props.onSubmit && props.onSubmit(displayName, inputFile)}>Save</Button>
+                <Button variant="contained" color="primary" onClick={() => displayName.length > 0 && props.onSubmit && props.onSubmit(displayName, inputFile)} disabled={displayName.length === 0}>Save</Button>
             </DialogActions>
         </Dialog>
     );

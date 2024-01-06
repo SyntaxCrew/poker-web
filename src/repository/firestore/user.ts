@@ -13,8 +13,8 @@ const userDoc = (userUID: string) => doc(firestore, userCollection, userUID).wit
 export async function getUserProfile(): Promise<UserProfile | undefined> {
     const currentUser = await getCurrentUser();
     if (currentUser) {
+        let imageURL = currentUser.photoURL || undefined;
         if (currentUser.isAnonymous) {
-            let imageURL = currentUser.photoURL || undefined;
             if (currentUser.photoURL) {
                 imageURL = await getFileURL(currentUser.photoURL);
             }
@@ -31,9 +31,8 @@ export async function getUserProfile(): Promise<UserProfile | undefined> {
         const docSnap = await getDoc(userDoc(currentUser.uid));
         if (docSnap.exists()) {
             const user = docSnap.data();
-            let imageURL = user.imageURL;
-            if (currentUser.photoURL) {
-                imageURL = await getFileURL(currentUser.photoURL);
+            if (user.imageURL) {
+                imageURL = await getFileURL(user.imageURL);
             }
             return {
                 userUUID: user.userUID,
@@ -63,9 +62,9 @@ export async function updateUserProfile(user: {userUID: string, isAnonymous: boo
         imageURL = await uploadFile('profile/'+user.userUID, user.file);
     }
     if (user.isAnonymous) {
-        updateProfile(await getCurrentUser(), { displayName: user.displayName, photoURL: imageURL });
+        await updateProfile(await getCurrentUser(), { displayName: user.displayName, photoURL: imageURL });
         return;
     }
     const now = Timestamp.fromDate(new Date());
-    await updateDoc(userDoc(user.userUID), {...user, displayName: user.displayName, imageURL, updatedAt: now});
+    await updateDoc(userDoc(user.userUID), {displayName: user.displayName, imageURL, updatedAt: now});
 }

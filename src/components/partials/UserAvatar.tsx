@@ -51,11 +51,13 @@ export default function UserAvatar() {
                 prefixIcon: <Login fontSize="small" />,
                 text: 'Signin',
                 hasMenu: (profile: UserProfile) => profile.isAnonymous,
+                onClick: signInWithGoogle, // temp
             },
             {
                 prefixIcon: <PersonAdd fontSize="small" />,
                 text: 'Signup',
                 hasMenu: (profile: UserProfile) => profile.isAnonymous,
+                onClick: signInWithGoogle, // temp
             },
             {
                 prefixIcon: <Logout fontSize="small" />,
@@ -67,6 +69,7 @@ export default function UserAvatar() {
     ];
 
     async function updateProfile(displayName: string, file?: File) {
+        setLoading(true);
         try {
             await updateUserProfile({userUID: profile.userUUID, isAnonymous: profile.isAnonymous, displayName, file});
             const userProfile = await getUserProfile();
@@ -78,6 +81,7 @@ export default function UserAvatar() {
         } catch (error) {
             alert({message: 'Update profile failed, please try again!', severity: 'error'});
         }
+        setLoading(false);
         setOpenUserDialog(false);
     }
 
@@ -161,7 +165,7 @@ export default function UserAvatar() {
                 {menu.filter(menuItems => menuItems.filter(menuItem => !menuItem.hasMenu || menuItem.hasMenu(profile))?.length > 0).map((menuItems, index) => {
                     return (
                         <div key={index}>
-                            <Divider />
+                            <Divider className="!my-2" />
                             {menuItems.filter(menuItem => !menuItem.hasMenu || menuItem.hasMenu(profile)).map((menuItem, itemIndex) => {
                                 return (
                                     <MenuItem key={`${index}${itemIndex}`} disabled={menuItem.disabled} onClick={() => menuItem.onClick && menuItem.onClick()}>
