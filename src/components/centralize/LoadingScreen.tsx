@@ -4,7 +4,7 @@ export default function LoadingScreen(props: {isLoading: boolean, isBackdropBrig
     return (
         <>
             <Backdrop
-                sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 9999 }}
+                sx={{ color: '#fff', zIndex: () => 9000 }}
                 open={props.isLoading}
             >
                 <CircularProgress color="inherit" />

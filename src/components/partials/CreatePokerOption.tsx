@@ -1,9 +1,8 @@
-import { ChangeEvent, MouseEvent, useEffect, useState } from "react";
+import { ChangeEvent, MouseEvent, useContext, useEffect, useState } from "react";
 import { Button, Collapse, Dialog, DialogActions, DialogContent, DialogTitle, Divider, IconButton, InputAdornment, MenuItem, Switch, TextField } from "@mui/material";
 import Close from '@mui/icons-material/Close';
-import Alert from "../centralize/Alert";
 import CreateCustomDeck from "../shared/CreateCustomDeck";
-import LoadingScreen from "../centralize/LoadingScreen";
+import GlobalContext from "../../context/global";
 import { Deck } from "../../models/game";
 import { AnonymousLocalStorageKey } from "../../models/key";
 import { CreatePokerOptionDialog, PokerOption } from "../../models/poker";
@@ -14,6 +13,8 @@ import { notMultiSpace, notStartWithSpace, pressEnter, setValue } from "../../ut
 import { getItem } from "../../utils/local-storage";
 
 export default function CreatePokerOption(props: {isOpen: boolean, onSubmit: (result: CreatePokerOptionDialog) => void, onCancel: () => void, profile: UserProfile}) {
+    const { setLoading, alert } = useContext(GlobalContext);
+
     const defaultDisplayName = "Guest";
     const defaultRoomName = "Room";
     const defaultDecks: Deck[] = [
@@ -44,8 +45,6 @@ export default function CreatePokerOption(props: {isOpen: boolean, onSubmit: (re
 
     const [isShowCollapse, setShowCollapse] = useState(false);
     const [isShowCreateCustomDeck, setShowCreateCustomDeck] = useState(false);
-    const [isLoading, setLoading] = useState(false);
-    const [alert, setAlert] = useState<{isShow: boolean, message: string, severity: 'error' | 'success'}>({isShow: false, message: '', severity: 'error'});
 
     useEffect(() => {
         init();
@@ -156,9 +155,9 @@ export default function CreatePokerOption(props: {isOpen: boolean, onSubmit: (re
                 await createCustomDeck(props.profile.userUUID, deck);
             }
             setEstimateOptions([...defaultDecks, ...(await customDecks())]);
-            setAlert({message: 'Create new custom deck successfully', severity: 'success', isShow: true});
+            alert({message: 'Create new custom deck successfully', severity: 'success'});
         } catch (error) {
-            setAlert({message: 'Create new custom deck failed', severity: 'error', isShow: true});
+            alert({message: 'Create new custom deck failed', severity: 'error'});
         } finally {
             setShowCreateCustomDeck(false);
             setLoading(false);
@@ -184,9 +183,9 @@ export default function CreatePokerOption(props: {isOpen: boolean, onSubmit: (re
             if (selectedDeckID) {
                 setEstimateOptionIndex(estimates.findIndex(estimate => estimate.deckID === selectedDeckID))
             }
-            setAlert({message: 'Remove custom deck successfully', severity: 'success', isShow: true});
+            alert({message: 'Remove custom deck successfully', severity: 'success'});
         } catch (error) {
-            setAlert({message: 'Remove custom deck failed', severity: 'error', isShow: true});
+            alert({message: 'Remove custom deck failed', severity: 'error'});
         } finally {
             setLoading(false);
         }
@@ -194,9 +193,6 @@ export default function CreatePokerOption(props: {isOpen: boolean, onSubmit: (re
 
     return (
         <>
-            <Alert isShowAlert={alert.isShow} onDismiss={() => setAlert({...alert, isShow: false})} severity={alert.severity} message={alert.message} />
-            <LoadingScreen isLoading={isLoading} />
-
             <Dialog open={props.isOpen} fullWidth>
                 {!isShowCreateCustomDeck && <>
                     <DialogTitle>

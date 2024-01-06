@@ -1,27 +1,23 @@
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, TextField, Divider, Card, Box, CircularProgress } from '@mui/material';
 import ScrumPokerImg from '/images/estimation.png';
-import Alert from '../components/centralize/Alert';
+import GlobalContext from '../context/global';
 import CreatePokerOption from '../components/partials/CreatePokerOption';
 import GoogleButton from '../components/partials/GoogleButton';
-import LoadingScreen from '../components/centralize/LoadingScreen';
 import { signInGoogle, signout } from '../firebase/authentication';
 import { createPokerRoom, isExistsPokerRoom } from '../repository/firestore/poker';
 import { getUserProfile, signin } from '../repository/firestore/user';
-import { UserProfile } from '../models/user';
 import { CreatePokerOptionDialog } from '../models/poker';
 import { pressEnter, setValue } from '../utils/input';
 
 export default function HomePage() {
+    const { profile, setProfile, alert, setLoading, isLoading } = useContext(GlobalContext);
     const navigate = useNavigate();
 
     const [roomID, setRoomID] = useState('');
-    const [profile, setProfile] = useState<UserProfile>({isAnonymous: true, userUUID: '', sessionUUID: ''});
-    const [isLoading, setLoading] = useState(true);
     const [isFindRoom, setFindRoom] = useState(false);
     const [isCreateRoom, setCreateRoom] = useState(false);
-    const [alert, setAlert] = useState<{isShow: boolean, message: string, severity: 'error' | 'success'}>({isShow: false, message: '', severity: 'error'});
 
     async function setUserProfile() {
         try {
@@ -31,7 +27,7 @@ export default function HomePage() {
             }
             setProfile(user);
         } catch (error) {
-            setAlert({message: 'Failed to get user profile', severity: 'error', isShow: true});
+            alert({message: 'Failed to get user profile', severity: 'error'});
         }
     }
 
@@ -56,7 +52,7 @@ export default function HomePage() {
             }
             navigate(`/${roomID}`);
         } catch (error) {
-            setAlert({message: `${error}`, severity: 'error', isShow: true});
+            alert({message: `${error}`, severity: 'error'});
         }
     }
 
@@ -67,7 +63,7 @@ export default function HomePage() {
                 const roomID = await createPokerRoom(profile.userUUID, req.displayName, req.roomName, req.isSpectator, req.option);
                 navigate(`/${roomID}`);
             } catch (error) {
-                setAlert({message: 'Create room failed', severity: 'error', isShow: true});
+                alert({message: 'Create room failed', severity: 'error'});
             }
             setLoading(false);
         }
@@ -86,7 +82,7 @@ export default function HomePage() {
                     isLinkGoogle: true,
                 });
                 await setUserProfile();
-                setAlert({message: 'Sign in with google successfully', severity: 'success', isShow: true});
+                alert({message: 'Sign in with google successfully', severity: 'success'});
             }
         } catch (error) {
             // Maybe error is `auth/popup-closed-by-user`, so skip alert
@@ -99,18 +95,15 @@ export default function HomePage() {
         try {
             await signout();
             await setUserProfile();
-            setAlert({message: 'Sign out successfully', severity: 'success', isShow: true});
+            alert({message: 'Sign out successfully', severity: 'success'});
         } catch (error) {
-            setAlert({message: 'Sign out failed', severity: 'error', isShow: true});
+            alert({message: 'Sign out failed', severity: 'error'});
         }
         setLoading(false);
     }
 
     return (
         <>
-            <LoadingScreen isLoading={isLoading} />
-            <Alert isShowAlert={alert.isShow} onDismiss={() => setAlert({...alert, isShow: false})} severity={alert.severity} message={alert.message} />
-
             <div className="w-screen h-screen flex overflow-y-auto">
                 <div className="w-full bg-white px-6 max-[900px]:hidden" id="{page}-logo">
                     <div className="relative top-1/2 -translate-y-1/2 overflow-y-auto">
