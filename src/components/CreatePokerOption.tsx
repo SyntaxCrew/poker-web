@@ -1,5 +1,5 @@
 import { ChangeEvent, MouseEvent, useEffect, useState } from "react";
-import { Button, Collapse, Dialog, DialogActions, DialogContent, DialogTitle, Divider, IconButton, MenuItem, Switch, TextField } from "@mui/material";
+import { Button, Collapse, Dialog, DialogActions, DialogContent, DialogTitle, Divider, IconButton, InputAdornment, MenuItem, Switch, TextField } from "@mui/material";
 import Close from '@mui/icons-material/Close';
 import Alert from "./Alert";
 import CreateCustomDeck from "./CreateCustomDeck";
@@ -10,7 +10,7 @@ import { CreatePokerOptionDialog, PokerOption } from "../models/poker";
 import { UserProfile } from "../models/user";
 import { createCustomDeck, deleteCustomDeck, getCustomDecks } from "../repository/firestore/game";
 import { randomString } from "../utils/generator";
-import { setValue } from "../utils/input";
+import { notMultiSpace, notStartWithSpace, pressEnter, setValue } from "../utils/input";
 import { getItem } from "../utils/local-storage";
 
 export default function CreatePokerOption(props: {isOpen: boolean, onSubmit: (result: CreatePokerOptionDialog) => void, onCancel: () => void, profile: UserProfile}) {
@@ -57,6 +57,23 @@ export default function CreatePokerOption(props: {isOpen: boolean, onSubmit: (re
     }, [props.profile]);
 
     const customDecks = async () => !props.profile.isAnonymous ? (await getCustomDecks(props.profile.userUUID)) : (getItem<Deck[]>(AnonymousLocalStorageKey.CustomDecks, true) || [])
+
+    const inputs = [
+        {
+            placeholder: 'Enter Display Name',
+            label: "Display's Name",
+            value: displayName,
+            onChange: setValue(setDisplayName, { maximum: 100, others: [notStartWithSpace, notMultiSpace] }),
+            endAdornmentText: (value: string) => `${value.length}/100`,
+        },
+        {
+            placeholder: 'Enter Room Name',
+            label: "Room's Name",
+            value: roomName,
+            onChange: setValue(setRoomName, { maximum: 30, others: [notStartWithSpace, notMultiSpace] }),
+            endAdornmentText: (value: string) => `${value.length}/30`,
+        },
+    ]
 
     const optionList = [
         {
@@ -183,29 +200,30 @@ export default function CreatePokerOption(props: {isOpen: boolean, onSubmit: (re
                     <DialogTitle>Game Option</DialogTitle>
 
                     <DialogContent className="flex flex-col gap-4 !max-w-2xl !w-full relative">
-                        <TextField
-                            fullWidth
-                            variant='outlined'
-                            placeholder='Enter Display Name'
-                            label="Display's Name"
-                            value={displayName}
-                            onChange={setValue(setDisplayName)}
-                            className="!mt-2"
-                        />
-                        <TextField
-                            fullWidth
-                            variant='outlined'
-                            placeholder='Enter Room Name'
-                            label="Room's Name"
-                            value={roomName}
-                            onChange={setValue(setRoomName)}
-                        />
+                        {inputs.map((input, index) => {
+                            return (
+                                <TextField
+                                    fullWidth
+                                    key={index}
+                                    variant='outlined'
+                                    placeholder={input.placeholder}
+                                    label={input.label}
+                                    value={input.value}
+                                    onChange={input.onChange}
+                                    onKeyDown={pressEnter(onSubmit)}
+                                    InputProps={{
+                                        endAdornment: <InputAdornment position="end">{ input.endAdornmentText(input.value) }</InputAdornment>,
+                                    }}
+                                    className={!index ? "!mt-2": ""}
+                                />
+                            );
+                        })}
                         <TextField select label="Voting system" value={estimateOptionIndex} onChange={selectEstimate}>
                             {estimateOptions.map((estimate, index) => {
                                 return (
                                     <MenuItem key={index} value={index}>
-                                        <div className="flex items-center justify-between w-full">
-                                            <div className="w-full">{ `${estimate.deckName} ( ${estimate.deckValues.join(', ')} )` }</div>
+                                        <div className="flex items-center justify-between gap-2 w-full overflow-hidden">
+                                            <div className="w-full whitespace-pre-line">{ `${estimate.deckName} ( ${estimate.deckValues.join(', ')} )` }</div>
                                             {estimate.deckID && estimateOptionIndex !== index && <IconButton
                                                 aria-label="close"
                                                 color="inherit"

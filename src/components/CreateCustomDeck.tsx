@@ -1,9 +1,9 @@
-import { Button, DialogActions, DialogContent, DialogTitle, Divider, TextField } from "@mui/material";
+import { Button, DialogActions, DialogContent, DialogTitle, Divider, InputAdornment, TextField } from "@mui/material";
 import { useEffect, useState } from "react";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EstimatePointCard from "./EstimatePointCard";
 import { Deck } from "../models/game";
-import { pressEnter, setValue } from "../utils/input";
+import { notMultiSpace, notStartWithSpace, pressEnter, setValue } from "../utils/input";
 
 export default function CreateCustomDeck(props: {onSubmit: (value: Deck) => Promise<void>, onClose: () => void}) {
     const defaultDeckValues = ['1', '2', '3', '4', '5', '8', '13'];
@@ -40,6 +40,23 @@ export default function CreateCustomDeck(props: {onSubmit: (value: Deck) => Prom
         setDeckValues(defaultDeckValues.join(','));
     }
 
+    const inputs = [
+        {
+            placeholder: 'Enter Deck Name',
+            label: "Deck Name",
+            value: deckName,
+            onChange: setValue(setDeckName, { maximum: 50, others: [notStartWithSpace, notMultiSpace] }),
+            endAdornmentText: (value: string) => `${value.length}/50`,
+        },
+        {
+            placeholder: 'Enter Deck Values',
+            label: "Deck Values",
+            value: deckValues,
+            onChange: setValue(setDeckValues),
+            helperText: 'Enter up to 3 characters per value (repeatable value), separated by commas.',
+        },
+    ]
+
     return (
         <>
             <DialogTitle>
@@ -50,26 +67,25 @@ export default function CreateCustomDeck(props: {onSubmit: (value: Deck) => Prom
             </DialogTitle>
 
             <DialogContent className="flex flex-col gap-4 relative">
-                <TextField
-                    fullWidth
-                    variant='outlined'
-                    placeholder='Enter Deck Name'
-                    label="Deck Name"
-                    value={deckName}
-                    onChange={setValue(setDeckName)}
-                    onKeyDown={pressEnter(onSubmit)}
-                    className="!mt-2"
-                />
-                <TextField
-                    fullWidth
-                    variant='outlined'
-                    placeholder='Enter Deck Values'
-                    label="Deck Values"
-                    value={deckValues}
-                    onChange={setValue(setDeckValues)}
-                    onKeyDown={pressEnter(onSubmit)}
-                    helperText="Enter up to 3 characters per value, separated by commas."
-                />
+                {inputs.map((input, index) => {
+                    return (
+                        <TextField
+                            fullWidth
+                            key={index}
+                            variant='outlined'
+                            placeholder={input.placeholder}
+                            label={input.label}
+                            value={input.value}
+                            onChange={input.onChange}
+                            InputProps={{
+                                endAdornment: !input.endAdornmentText ? undefined : <InputAdornment position="end">{ input.endAdornmentText(input.value) }</InputAdornment>,
+                            }}
+                            helperText={input.helperText}
+                            onKeyDown={pressEnter(onSubmit)}
+                            className={!index ? "!mt-2": ""}
+                        />
+                    );
+                })}
 
                 <div>
                     <div><b>Preview</b></div>
