@@ -18,7 +18,7 @@ export default function Alert(props: {isShowAlert: boolean, onDismiss: (isShowAl
     }, [props]);
 
     return (
-        <div className="fixed top-6 left-0 right-0 w-fit m-auto flex flex-col justify-start items-center z-[1000]">
+        <div className="fixed top-6 left-0 right-0 w-fit m-auto flex flex-col justify-start items-center z-[9000]">
             <Slide direction='down' in={props.isShowAlert} timeout={500} mountOnEnter unmountOnExit>
                 <div>
                     <Fade in={props.isShowAlert} timeout={1000}>

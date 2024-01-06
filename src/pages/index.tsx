@@ -145,7 +145,7 @@ export default function HomePage() {
             </div>
 
             <CreatePokerOption
-                displayName={profile.displayName}
+                profile={profile}
                 isOpen={isCreateRoom}
                 onCancel={() => setCreateRoom(false)}
                 onSubmit={createRoom}

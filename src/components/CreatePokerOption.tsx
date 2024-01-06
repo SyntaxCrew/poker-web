@@ -1,11 +1,17 @@
 import { ChangeEvent, useEffect, useState } from "react";
 import { Button, Collapse, Dialog, DialogActions, DialogContent, DialogTitle, Divider, MenuItem, Switch, TextField } from "@mui/material";
+import Alert from "./Alert";
 import CreateCustomDeck from "./CreateCustomDeck";
-import { Deck } from "../models/my-game";
+import LoadingScreen from "./LoadingScreen";
+import { Deck } from "../models/game";
+import { AnonymousLocalStorageKey } from "../models/key";
 import { CreatePokerOptionDialog, PokerOption } from "../models/poker";
+import { UserProfile } from "../models/user";
+import { createCustomDeck, getCustomDecks } from "../repository/firestore/game";
 import { setValue } from "../utils/input";
+import { getItem } from "../utils/local-storage";
 
-export default function CreatePokerOption(props: {isOpen: boolean, onSubmit: (result: CreatePokerOptionDialog) => void, onCancel: () => void, displayName?: string}) {
+export default function CreatePokerOption(props: {isOpen: boolean, onSubmit: (result: CreatePokerOptionDialog) => void, onCancel: () => void, profile: UserProfile}) {
     const [estimateOptions, setEstimateOptions] = useState<Deck[]>([
         {
             deckName: 'Fibonacci',
@@ -33,10 +39,19 @@ export default function CreatePokerOption(props: {isOpen: boolean, onSubmit: (re
     const [pokerOption, setPokerOption] = useState<PokerOption>({...defaultOption});
     const [isShowCollapse, setShowCollapse] = useState(false);
     const [isShowCreateCustomDeck, setShowCreateCustomDeck] = useState(false);
+    const [isLoading, setLoading] = useState(false);
+    const [alert, setAlert] = useState<{isShow: boolean, message: string, severity: 'error' | 'success'}>({isShow: false, message: '', severity: 'error'});
 
     useEffect(() => {
-        setDisplayName(props.displayName || '');
-    }, [props.displayName])
+        init();
+        async function init() {
+            if (props.profile.userUUID) {
+                const customDecks = !props.profile.isAnonymous ? (await getCustomDecks(props.profile.userUUID)) : (getItem<Deck[]>(AnonymousLocalStorageKey.CustomDecks, true) || []);
+                setEstimateOptions([...estimateOptions, ...customDecks]);
+            }
+            setDisplayName(props.profile.displayName || '');
+        }
+    }, [props.profile]);
 
     const optionList = [
         {
@@ -88,7 +103,7 @@ export default function CreatePokerOption(props: {isOpen: boolean, onSubmit: (re
         setTimeout(() => {
             setShowCollapse(false);
             setRoomName('');
-            setDisplayName(props.displayName || '');
+            setDisplayName(props.profile.displayName || '');
             setSpectator(false);
             setEstimateOptionIndex(0);
             setPokerOption({...defaultOption});
@@ -96,8 +111,33 @@ export default function CreatePokerOption(props: {isOpen: boolean, onSubmit: (re
         props.onCancel();
     }
 
+    async function addCustomDeck(deck: Deck) {
+        if (!props.profile.userUUID) {
+            return;
+        }
+        if (props.profile.isAnonymous) {
+            const customDecks = getItem<Deck[]>(AnonymousLocalStorageKey.CustomDecks, true) || [];
+            localStorage.setItem(AnonymousLocalStorageKey.CustomDecks, JSON.stringify([...customDecks, deck]))
+            return;
+        }
+        try {
+            setLoading(true);
+            await createCustomDeck(props.profile.userUUID, deck);
+            setEstimateOptions([...estimateOptions, deck]);
+            setAlert({message: 'Create new custom deck successfully', severity: 'success', isShow: true});
+        } catch (error) {
+            setAlert({message: 'Create new custom deck failed', severity: 'error', isShow: true});
+        } finally {
+            setShowCreateCustomDeck(false);
+            setLoading(false);
+        }
+    }
+
     return (
         <>
+            <Alert isShowAlert={alert.isShow} onDismiss={() => setAlert({...alert, isShow: false})} severity={alert.severity} message={alert.message} />
+            <LoadingScreen isLoading={isLoading} />
+
             <Dialog open={props.isOpen} fullWidth>
                 {!isShowCreateCustomDeck && <>
                     <DialogTitle>Game Option</DialogTitle>
@@ -153,7 +193,7 @@ export default function CreatePokerOption(props: {isOpen: boolean, onSubmit: (re
                 </>}
 
                 {isShowCreateCustomDeck && <CreateCustomDeck
-                    onSubmit={deck => {setShowCreateCustomDeck(false); setEstimateOptions([...estimateOptions, deck]);}}
+                    onSubmit={addCustomDeck}
                     onClose={() => setShowCreateCustomDeck(false)}
                 />}
             </Dialog>

@@ -2,10 +2,10 @@ import { Button, DialogActions, DialogContent, DialogTitle, Divider, TextField }
 import { useEffect, useState } from "react";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EstimatePointCard from "./EstimatePointCard";
-import { Deck } from "../models/my-game";
+import { Deck } from "../models/game";
 import { pressEnter, setValue } from "../utils/input";
 
-export default function CreateCustomDeck(props: {onSubmit: (value: Deck) => void, onClose: () => void}) {
+export default function CreateCustomDeck(props: {onSubmit: (value: Deck) => Promise<void>, onClose: () => void}) {
     const defaultDeckValues = ['1', '2', '3', '4', '5', '8', '13'];
     const [deckName, setDeckName] = useState('My custom deck');
     const [deckValues, setDeckValues] = useState(defaultDeckValues.join(','));
@@ -30,11 +30,11 @@ export default function CreateCustomDeck(props: {onSubmit: (value: Deck) => void
         setPreviewDeckValues(validValues);
     }, [deckValues]);
 
-    const onSubmit = () => {
+    const onSubmit = async () => {
         if (deckName.trim().length === 0 || deckValues.trim().length === 0) {
             return;
         }
-        props.onSubmit({deckName: deckName.trim(), deckValues: deckValues.trim().split(',')});
+        await props.onSubmit({deckName: deckName.trim(), deckValues: deckValues.trim().split(',')});
         setDeckName('My custom deck');
         setPreviewCurrentDeckValue(undefined);
         setDeckValues(defaultDeckValues.join(','));
@@ -76,9 +76,10 @@ export default function CreateCustomDeck(props: {onSubmit: (value: Deck) => void
                     <div>This is a preview of how your deck will look like.</div>
                 </div>
                 <div className="flex flex-wrap gap-4 justify-center">
-                    {previewDeckValues.map(deckValue => {
+                    {previewDeckValues.map((deckValue, index) => {
                         return (
                             <EstimatePointCard
+                                key={index}
                                 disabled={false}
                                 estimatePoint={deckValue}
                                 currentPoint={previewCurrentDeckValue}

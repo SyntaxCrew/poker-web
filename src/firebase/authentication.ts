@@ -1,10 +1,12 @@
 import { getAuth, onAuthStateChanged, signInAnonymously, signInWithPopup, GoogleAuthProvider, signOut } from "firebase/auth";
 import app from "./firebase";
+import { AnonymousLocalStorageKey } from "../models/key";
 
 const auth = getAuth(app);
 onAuthStateChanged(auth, async (user) => {
     if (!user) {
         await signInAnonymously(auth);
+        Object.values(AnonymousLocalStorageKey).forEach(key => localStorage.removeItem(key));
     }
 });
 

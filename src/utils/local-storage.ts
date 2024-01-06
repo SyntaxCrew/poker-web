@@ -38,3 +38,13 @@ export const decodeToken = (opt?: { isCheckExpire?: boolean }): AccessToken | un
         return;
     }
 }
+
+export function getItem<T>(key: string, isJSON?: boolean) {
+    const data = localStorage.getItem(key);
+    if (data) {
+        if (isJSON) {
+            return JSON.parse(data) as T;
+        }
+        return data as T;
+    }
+}
