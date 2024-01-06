@@ -24,15 +24,23 @@ export default function HomePage() {
     const [alert, setAlert] = useState<{isShow: boolean, message: string, severity: 'error' | 'success'}>({isShow: false, message: '', severity: 'error'});
 
     async function setUserProfile() {
-        const user = await getUserProfile();
-        if (user) {
+        try {
+            const user = await getUserProfile();
+            if (!user) {
+                throw Error('user not found')
+            }
             setProfile(user);
+        } catch (error) {
+            setAlert({message: 'Failed to get user profile', severity: 'error', isShow: true});
         }
-        setLoading(false);
     }
 
     useEffect(() => {
-        setUserProfile();
+        init();
+        async function init() {
+            await setUserProfile();
+            setLoading(false);
+        }
     }, []);
 
     async function joinRoom() {
@@ -40,47 +48,62 @@ export default function HomePage() {
             return;
         }
         setFindRoom(true);
-        const isRoomExists = await isExistsPokerRoom(roomID);
-        setFindRoom(false);
-        if (!isRoomExists) {
-            setAlert({message: 'Room number is not found', severity: 'error', isShow: true});
-            return;
+        try {
+            const isRoomExists = await isExistsPokerRoom(roomID);
+            setFindRoom(false);
+            if (!isRoomExists) {
+                throw Error('Room number is not found');
+            }
+            navigate(`/${roomID}`);
+        } catch (error) {
+            setAlert({message: `${error}`, severity: 'error', isShow: true});
         }
-        navigate(`/${roomID}`);
     }
 
     async function createRoom(req: CreatePokerOptionDialog) {
         if (profile.displayName) {
             setLoading(true);
-            const roomID = await createPokerRoom(profile.userUUID, req.displayName, req.roomName, req.isSpectator, req.option);
-            navigate(`/${roomID}`);
+            try {
+                const roomID = await createPokerRoom(profile.userUUID, req.displayName, req.roomName, req.isSpectator, req.option);
+                navigate(`/${roomID}`);
+            } catch (error) {
+                setAlert({message: 'Create room failed', severity: 'error', isShow: true});
+            }
             setLoading(false);
         }
     }
 
     async function signInWithGoogle() {
         setLoading(true);
-        const user = await signInGoogle();
-        if (user) {
-            await signin({
-                userUID: user.uid,
-                email: user.email || undefined,
-                displayName: user.displayName || '',
-                isAnonymous: false,
-                isLinkGoogle: true,
-            });
-            await setUserProfile();
-            setAlert({message: 'Sign in with google successfully', severity: 'success', isShow: true});
+        try {
+            const user = await signInGoogle();
+            if (user) {
+                await signin({
+                    userUID: user.uid,
+                    email: user.email || undefined,
+                    displayName: user.displayName || '',
+                    isAnonymous: false,
+                    isLinkGoogle: true,
+                });
+                await setUserProfile();
+                setAlert({message: 'Sign in with google successfully', severity: 'success', isShow: true});
+            }
+        } catch (error) {
+            // Maybe error is `auth/popup-closed-by-user`, so skip alert
         }
         setLoading(false);
     }
 
     async function signOut() {
         setLoading(true);
-        await signout();
-        await setUserProfile();
+        try {
+            await signout();
+            await setUserProfile();
+            setAlert({message: 'Sign out successfully', severity: 'success', isShow: true});
+        } catch (error) {
+            setAlert({message: 'Sign out failed', severity: 'error', isShow: true});
+        }
         setLoading(false);
-        setAlert({message: 'Sign out successfully', severity: 'success', isShow: true});
     }
 
     return (
