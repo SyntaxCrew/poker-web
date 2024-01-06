@@ -1,5 +1,5 @@
 import { Button, Dialog, DialogActions, DialogTitle } from "@mui/material";
-import { UserProfile } from "../models/user";
+import { UserProfile } from "../../models/user";
 import GoogleIcon from '/images/google-icon.png';
 import { useState } from "react";
 

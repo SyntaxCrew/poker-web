@@ -1,4 +1,4 @@
-import { clearUsers } from "../repository/firestore/poker";
+import { clearUsers } from "../../repository/firestore/poker";
 
 export default function UserCard(props: {roomID: string, userUUID: string, displayName: string, estimatePoint?: string, isShowEstimates: boolean, allowOthersToDeleteEstimates: boolean}) {
     return (

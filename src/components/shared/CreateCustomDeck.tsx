@@ -3,8 +3,8 @@ import { useEffect, useState } from "react";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { Close } from "@mui/icons-material";
 import EstimatePointCard from "./EstimatePointCard";
-import { Deck } from "../models/game";
-import { notMultiSpace, notStartWithSpace, pressEnter, setValue } from "../utils/input";
+import { Deck } from "../../models/game";
+import { notMultiSpace, notStartWithSpace, pressEnter, setValue } from "../../utils/input";
 
 export default function CreateCustomDeck(props: {onSubmit: (value: Deck) => Promise<void>, onClose: (event: 'close' | 'back') => void}) {
     const defaultDeckValues = ['1', '2', '3', '4', '5', '8', '13'];

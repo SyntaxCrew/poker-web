@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useBeforeUnload, useNavigate, useParams } from "react-router-dom";
 import PokerLogo from '/images/poker.png';
-import EstimatePointCard from "../../components/EstimatePointCard";
-import UserCard from "../../components/UserCard";
+import EstimatePointCard from "../../components/shared/EstimatePointCard";
+import UserCard from "../../components/partials/UserCard";
 import { clearUsers, joinGame, joinPokerRoom, leavePokerRoom, updateEstimateStatus, pokeCard } from '../../repository/firestore/poker';
 import { getUserProfile } from '../../repository/firestore/user';
 import { EstimateStatus, Poker } from "../../models/poker";

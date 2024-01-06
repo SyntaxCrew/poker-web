@@ -1,17 +1,17 @@
 import { ChangeEvent, MouseEvent, useEffect, useState } from "react";
 import { Button, Collapse, Dialog, DialogActions, DialogContent, DialogTitle, Divider, IconButton, InputAdornment, MenuItem, Switch, TextField } from "@mui/material";
 import Close from '@mui/icons-material/Close';
-import Alert from "./Alert";
-import CreateCustomDeck from "./CreateCustomDeck";
-import LoadingScreen from "./LoadingScreen";
-import { Deck } from "../models/game";
-import { AnonymousLocalStorageKey } from "../models/key";
-import { CreatePokerOptionDialog, PokerOption } from "../models/poker";
-import { UserProfile } from "../models/user";
-import { createCustomDeck, deleteCustomDeck, getCustomDecks } from "../repository/firestore/game";
-import { randomString } from "../utils/generator";
-import { notMultiSpace, notStartWithSpace, pressEnter, setValue } from "../utils/input";
-import { getItem } from "../utils/local-storage";
+import Alert from "../centralize/Alert";
+import CreateCustomDeck from "../shared/CreateCustomDeck";
+import LoadingScreen from "../centralize/LoadingScreen";
+import { Deck } from "../../models/game";
+import { AnonymousLocalStorageKey } from "../../models/key";
+import { CreatePokerOptionDialog, PokerOption } from "../../models/poker";
+import { UserProfile } from "../../models/user";
+import { createCustomDeck, deleteCustomDeck, getCustomDecks } from "../../repository/firestore/game";
+import { randomString } from "../../utils/generator";
+import { notMultiSpace, notStartWithSpace, pressEnter, setValue } from "../../utils/input";
+import { getItem } from "../../utils/local-storage";
 
 export default function CreatePokerOption(props: {isOpen: boolean, onSubmit: (result: CreatePokerOptionDialog) => void, onCancel: () => void, profile: UserProfile}) {
     const defaultDisplayName = "Guest";
