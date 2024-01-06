@@ -1,32 +1,14 @@
 import { MouseEvent, useContext, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider, IconButton, ListItemIcon, ListItemText, Menu, MenuItem, Typography } from "@mui/material";
+import { Divider, ListItemIcon, ListItemText, Menu, MenuItem, Typography } from "@mui/material";
 import { CollectionsBookmark, Logout, Login, PersonAdd, ManageAccounts } from '@mui/icons-material';
+import Avatar from "./Avatar";
+import SignoutDialog from "../dialog/SignoutDialog";
 import GlobalContext from "../../context/global";
 import { UserProfile } from "../../models/user";
 import { signInGoogle, signout } from "../../firebase/authentication";
-import { getUserProfile, signin } from "../../repository/firestore/user";
-
-function Avatar(props: {profile: UserProfile, onClick?: (event: MouseEvent<HTMLButtonElement>) => void, size?: 'small' | 'medium' | 'large'}) {
-    const sizeClass = !props.size ? 'min-w-10 max-w-10 min-h-10 max-h-10' : props.size === 'medium' ? `min-w-[3.25rem] max-w-[3.25rem] min-h-[3.25rem] max-h-[3.25rem]` : 'min-w-[4rem] max-w-[4rem] min-h-[4rem] max-h-[4rem]'
-    return (
-        <IconButton
-            color="inherit"
-            size="small"
-            onClick={e => props.onClick && props.onClick(e)}
-            className="w-fit"
-        >
-            {props.profile.imageURL
-                ? <img src={props.profile.imageURL} alt="User avatar" className={`rounded-full hover:brightness-90 ease-in duration-200 transition-[--tw-brightness] ` + sizeClass} />
-                : <div className="rounded-full bg-blue-300 hover:brightness-90 ease-in duration-200 transition-[--tw-brightness]">
-                    <div className={`flex items-center justify-center font-bold text-white ` + sizeClass}>
-                        { props.profile.displayName ? props.profile.displayName.charAt(0) : 'G' }
-                    </div>
-                </div>
-            }
-        </IconButton>
-    );
-}
+import { getUserProfile, signin, updateUserProfile } from "../../repository/firestore/user";
+import ProfileDialog from "../dialog/ProfileDialog";
 
 export default function UserAvatar() {
     const { setLoading, alert, setProfile, profile } = useContext(GlobalContext);
@@ -34,8 +16,10 @@ export default function UserAvatar() {
     const navigate = useNavigate();
     const location = useLocation();
 
-    const [isShowMenu, setShowMenu] = useState(false);
-    const [isShowLogoutDialog, setShowLogoutDialog] = useState(false);
+    const [isOpenMenu, setOpenMenu] = useState(false);
+    const [isOpenLogoutDialog, setOpenLogoutDialog] = useState(false);
+    const [isOpenUserDialog, setOpenUserDialog] = useState(false);
+
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
     interface Menu {
@@ -59,6 +43,7 @@ export default function UserAvatar() {
             {
                 prefixIcon: <ManageAccounts fontSize="small" />,
                 text: 'Profile',
+                onClick: () => setOpenUserDialog(true),
             },
         ],
         [
@@ -76,10 +61,25 @@ export default function UserAvatar() {
                 prefixIcon: <Logout fontSize="small" />,
                 text: 'Signout',
                 hasMenu: (profile: UserProfile) => !profile.isAnonymous,
-                onClick: () => setShowLogoutDialog(true),
+                onClick: () => setOpenLogoutDialog(true),
             },
         ],
     ];
+
+    async function updateProfile(displayName: string, file?: File) {
+        try {
+            await updateUserProfile({userUID: profile.userUUID, isAnonymous: profile.isAnonymous, displayName, file});
+            const userProfile = await getUserProfile();
+            if (!userProfile) {
+                throw Error('user not found');
+            }
+            setProfile(userProfile);
+            alert({message: 'Update profile successfully', severity: 'success'});
+        } catch (error) {
+            alert({message: 'Update profile failed, please try again!', severity: 'error'});
+        }
+        setOpenUserDialog(false);
+    }
 
     async function signInWithGoogle() {
         setLoading(true);
@@ -122,13 +122,13 @@ export default function UserAvatar() {
         } catch (error) {
             alert({message: 'Sign out failed', severity: 'error'});
         }
-        setShowLogoutDialog(false);
+        setOpenLogoutDialog(false);
         setLoading(false);
     }
 
     const toggle = (event: MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
-        setShowMenu(!isShowMenu);
+        setOpenMenu(!isOpenMenu);
     }
 
     return (
@@ -137,8 +137,8 @@ export default function UserAvatar() {
 
             <Menu
                 anchorEl={anchorEl}
-                open={isShowMenu}
-                onClose={() => setShowMenu(false)}
+                open={isOpenMenu}
+                onClose={() => setOpenMenu(false)}
                 elevation={8}
                 className="w-full"
                 anchorOrigin={{
@@ -180,15 +180,8 @@ export default function UserAvatar() {
                 })}
             </Menu>
 
-            {/* Signout Confirm Dialog */}
-            <Dialog open={isShowLogoutDialog} onClose={() => setShowLogoutDialog(false)} maxWidth='xs' fullWidth>
-                <DialogTitle>Signout</DialogTitle>
-                <DialogContent>Are you sure to signout?</DialogContent>
-                <DialogActions>
-                    <Button variant="outlined" color="error" onClick={() => setShowLogoutDialog(false)}>Cancel</Button>
-                    <Button variant="contained" color="error" onClick={signOut}>Signout</Button>
-                </DialogActions>
-            </Dialog>
+            <ProfileDialog open={isOpenUserDialog} profile={profile} onSubmit={updateProfile} onClose={() => setOpenUserDialog(false)} />
+            <SignoutDialog open={isOpenLogoutDialog} onSubmit={signOut} onClose={() => setOpenLogoutDialog(false)} />
         </>
     );
 }

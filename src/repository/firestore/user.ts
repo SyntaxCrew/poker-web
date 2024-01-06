@@ -2,6 +2,7 @@ import { updateProfile } from "firebase/auth";
 import { Timestamp, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { getCurrentUser } from "../../firebase/authentication";
 import firestore from "../../firebase/firestore";
+import { getFileURL, uploadFile } from "../../firebase/storage";
 import { converter } from "../../models/firestore";
 import { User, UserProfile } from "../../models/user";
 import { randomString } from "../../utils/generator";
@@ -13,24 +14,34 @@ export async function getUserProfile(): Promise<UserProfile | undefined> {
     const currentUser = await getCurrentUser();
     if (currentUser) {
         if (currentUser.isAnonymous) {
+            let imageURL = currentUser.photoURL || undefined;
+            if (currentUser.photoURL) {
+                imageURL = await getFileURL(currentUser.photoURL);
+            }
             return {
                 userUUID: currentUser.uid,
                 email: currentUser.email ?? undefined,
                 displayName: currentUser.displayName || 'Guest',
                 isAnonymous: currentUser.isAnonymous,
+                imageURL,
                 sessionUUID: randomString(20),
             };
         }
+
         const docSnap = await getDoc(userDoc(currentUser.uid));
         if (docSnap.exists()) {
             const user = docSnap.data();
+            let imageURL = user.imageURL;
+            if (currentUser.photoURL) {
+                imageURL = await getFileURL(currentUser.photoURL);
+            }
             return {
                 userUUID: user.userUID,
                 email: user.email,
                 displayName: user.displayName,
                 isAnonymous: false,
+                imageURL: imageURL || currentUser.photoURL || undefined,
                 sessionUUID: randomString(20),
-                imageURL: user.imageURL || currentUser.photoURL || undefined,
             };
         }
     }
@@ -46,11 +57,15 @@ export async function signin(user: User) {
     }
 }
 
-export async function updateUser(user: User) {
+export async function updateUserProfile(user: {userUID: string, isAnonymous: boolean, displayName: string, file?: File}) {
+    let imageURL: string | undefined = undefined;
+    if (user.file) {
+        imageURL = await uploadFile('profile/'+user.userUID, user.file);
+    }
     if (user.isAnonymous) {
-        updateProfile(await getCurrentUser(), { displayName: user.displayName, photoURL: user.imageURL });
+        updateProfile(await getCurrentUser(), { displayName: user.displayName, photoURL: imageURL });
         return;
     }
     const now = Timestamp.fromDate(new Date());
-    await updateDoc(userDoc(user.userUID), {...user, updatedAt: now});
+    await updateDoc(userDoc(user.userUID), {...user, displayName: user.displayName, imageURL, updatedAt: now});
 }
