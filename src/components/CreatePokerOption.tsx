@@ -1,5 +1,6 @@
-import { ChangeEvent, useEffect, useState } from "react";
-import { Button, Collapse, Dialog, DialogActions, DialogContent, DialogTitle, Divider, MenuItem, Switch, TextField } from "@mui/material";
+import { ChangeEvent, MouseEvent, useEffect, useState } from "react";
+import { Button, Collapse, Dialog, DialogActions, DialogContent, DialogTitle, Divider, IconButton, MenuItem, Switch, TextField } from "@mui/material";
+import Close from '@mui/icons-material/Close';
 import Alert from "./Alert";
 import CreateCustomDeck from "./CreateCustomDeck";
 import LoadingScreen from "./LoadingScreen";
@@ -7,12 +8,13 @@ import { Deck } from "../models/game";
 import { AnonymousLocalStorageKey } from "../models/key";
 import { CreatePokerOptionDialog, PokerOption } from "../models/poker";
 import { UserProfile } from "../models/user";
-import { createCustomDeck, getCustomDecks } from "../repository/firestore/game";
+import { createCustomDeck, deleteCustomDeck, getCustomDecks } from "../repository/firestore/game";
+import { randomString } from "../utils/generator";
 import { setValue } from "../utils/input";
 import { getItem } from "../utils/local-storage";
 
 export default function CreatePokerOption(props: {isOpen: boolean, onSubmit: (result: CreatePokerOptionDialog) => void, onCancel: () => void, profile: UserProfile}) {
-    const [estimateOptions, setEstimateOptions] = useState<Deck[]>([
+    const defaultDecks: Deck[] = [
         {
             deckName: 'Fibonacci',
             deckValues: ['0', '1', '2', '3', '5', '8', '13', '21', '34', '55', '89', '?', '☕'],
@@ -21,10 +23,10 @@ export default function CreatePokerOption(props: {isOpen: boolean, onSubmit: (re
             deckName: 'Manday',
             deckValues: ['0', '0.5', '1', '1.5', '2', '2.5', '3', '4', '5', '6', '7', '?', '☕'],
         },
-    ]);
+    ]
 
     const defaultOption: PokerOption = {
-        estimateOptions: estimateOptions[0].deckValues,
+        estimateOptions: defaultDecks[0].deckValues,
         autoRevealCards: true,
         allowOthersToShowEstimates: true,
         allowOthersToClearUsers: false,
@@ -36,7 +38,9 @@ export default function CreatePokerOption(props: {isOpen: boolean, onSubmit: (re
     const [displayName, setDisplayName] = useState('');
     const [isSpectator, setSpectator] = useState(false);
     const [estimateOptionIndex, setEstimateOptionIndex] = useState(0);
+    const [estimateOptions, setEstimateOptions] = useState<Deck[]>([...defaultDecks]);
     const [pokerOption, setPokerOption] = useState<PokerOption>({...defaultOption});
+
     const [isShowCollapse, setShowCollapse] = useState(false);
     const [isShowCreateCustomDeck, setShowCreateCustomDeck] = useState(false);
     const [isLoading, setLoading] = useState(false);
@@ -46,12 +50,13 @@ export default function CreatePokerOption(props: {isOpen: boolean, onSubmit: (re
         init();
         async function init() {
             if (props.profile.userUUID) {
-                const customDecks = !props.profile.isAnonymous ? (await getCustomDecks(props.profile.userUUID)) : (getItem<Deck[]>(AnonymousLocalStorageKey.CustomDecks, true) || []);
-                setEstimateOptions([...estimateOptions, ...customDecks]);
+                setEstimateOptions([...defaultDecks, ...(await customDecks())]);
             }
             setDisplayName(props.profile.displayName || '');
         }
     }, [props.profile]);
+
+    const customDecks = async () => !props.profile.isAnonymous ? (await getCustomDecks(props.profile.userUUID)) : (getItem<Deck[]>(AnonymousLocalStorageKey.CustomDecks, true) || [])
 
     const optionList = [
         {
@@ -111,24 +116,59 @@ export default function CreatePokerOption(props: {isOpen: boolean, onSubmit: (re
         props.onCancel();
     }
 
+    const selectEstimate = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        if (Number(event.target.value) === -1) {
+            return;
+        }
+        setEstimateOptionIndex(Number(event.target.value))
+    }
+
     async function addCustomDeck(deck: Deck) {
         if (!props.profile.userUUID) {
             return;
         }
-        if (props.profile.isAnonymous) {
-            const customDecks = getItem<Deck[]>(AnonymousLocalStorageKey.CustomDecks, true) || [];
-            localStorage.setItem(AnonymousLocalStorageKey.CustomDecks, JSON.stringify([...customDecks, deck]))
-            return;
-        }
         try {
             setLoading(true);
-            await createCustomDeck(props.profile.userUUID, deck);
-            setEstimateOptions([...estimateOptions, deck]);
+            if (props.profile.isAnonymous) {
+                deck.deckID = randomString(20);
+                const customDecks = getItem<Deck[]>(AnonymousLocalStorageKey.CustomDecks, true) || [];
+                localStorage.setItem(AnonymousLocalStorageKey.CustomDecks, JSON.stringify([...customDecks, deck]))
+            } else {
+                await createCustomDeck(props.profile.userUUID, deck);
+            }
+            setEstimateOptions([...defaultDecks, ...(await customDecks())]);
             setAlert({message: 'Create new custom deck successfully', severity: 'success', isShow: true});
         } catch (error) {
             setAlert({message: 'Create new custom deck failed', severity: 'error', isShow: true});
         } finally {
             setShowCreateCustomDeck(false);
+            setLoading(false);
+        }
+    }
+
+    async function removeCustomDeck(event: MouseEvent<HTMLButtonElement, globalThis.MouseEvent>, deck: Deck) {
+        if (!props.profile.userUUID) {
+            return;
+        }
+        event.stopPropagation();
+        try {
+            setLoading(true);
+            const selectedDeckID = estimateOptions[estimateOptionIndex].deckID;
+            if (props.profile.isAnonymous) {
+                const customDecks = (getItem<Deck[]>(AnonymousLocalStorageKey.CustomDecks, true) || []).filter(d => d.deckID !== deck.deckID);
+                localStorage.setItem(AnonymousLocalStorageKey.CustomDecks, JSON.stringify([...customDecks]))
+            } else {
+                await deleteCustomDeck(props.profile.userUUID, deck);
+            }
+            const estimates = [...defaultDecks, ...(await customDecks())]
+            setEstimateOptions(estimates);
+            if (selectedDeckID) {
+                setEstimateOptionIndex(estimates.findIndex(estimate => estimate.deckID === selectedDeckID))
+            }
+            setAlert({message: 'Remove custom deck successfully', severity: 'success', isShow: true});
+        } catch (error) {
+            setAlert({message: 'Remove custom deck failed', severity: 'error', isShow: true});
+        } finally {
             setLoading(false);
         }
     }
@@ -160,10 +200,22 @@ export default function CreatePokerOption(props: {isOpen: boolean, onSubmit: (re
                             value={roomName}
                             onChange={setValue(setRoomName)}
                         />
-                        <TextField select label="Voting system" value={estimateOptionIndex} onChange={e => Number(e.target.value) !== -1 && setEstimateOptionIndex(Number(e.target.value))}>
+                        <TextField select label="Voting system" value={estimateOptionIndex} onChange={selectEstimate}>
                             {estimateOptions.map((estimate, index) => {
                                 return (
-                                    <MenuItem key={index} value={index}>{ `${estimate.deckName} ( ${estimate.deckValues.join(', ')} )` }</MenuItem>
+                                    <MenuItem key={index} value={index}>
+                                        <div className="flex items-center justify-between w-full">
+                                            <div className="w-full">{ `${estimate.deckName} ( ${estimate.deckValues.join(', ')} )` }</div>
+                                            {estimate.deckID && estimateOptionIndex !== index && <IconButton
+                                                aria-label="close"
+                                                color="inherit"
+                                                size="small"
+                                                onClick={e => removeCustomDeck(e, estimate)}
+                                            >
+                                                <Close fontSize="inherit" color="error" />
+                                            </IconButton>}
+                                        </div>
+                                    </MenuItem>
                                 );
                             })}
                             <MenuItem value={-1} onClick={() => setShowCreateCustomDeck(true)}><div className="text-blue-500 font-bold">Create custom deck...</div></MenuItem>

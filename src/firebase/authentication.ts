@@ -5,8 +5,8 @@ import { AnonymousLocalStorageKey } from "../models/key";
 const auth = getAuth(app);
 onAuthStateChanged(auth, async (user) => {
     if (!user) {
-        await signInAnonymously(auth);
         Object.values(AnonymousLocalStorageKey).forEach(key => localStorage.removeItem(key));
+        await signInAnonymously(auth);
     }
 });
 

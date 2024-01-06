@@ -2,6 +2,7 @@ import { Timestamp, arrayRemove, arrayUnion, doc, getDoc, setDoc, updateDoc } fr
 import firestore from "../../firebase/firestore";
 import { converter } from "../../models/firestore";
 import { Deck, Game } from "../../models/game";
+import { randomString } from "../../utils/generator";
 
 const gameCollection = "game";
 const gameDoc = (userUID: string) => doc(firestore, gameCollection, userUID).withConverter(converter<Game>());
@@ -15,6 +16,7 @@ export async function getCustomDecks(userUID: string) {
 }
 
 export async function createCustomDeck(userUID: string, deck: Deck) {
+    deck.deckID = randomString(20);
     const now = Timestamp.fromDate(new Date());
     const data = {
         userUID,

@@ -8,6 +8,7 @@ export interface Game {
 }
 
 export interface Deck {
+    deckID?: string
     deckName: string
     deckValues: string[]
 }
