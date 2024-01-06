@@ -1,11 +1,12 @@
-import { Button, DialogActions, DialogContent, DialogTitle, Divider, InputAdornment, TextField } from "@mui/material";
+import { Button, DialogActions, DialogContent, DialogTitle, Divider, IconButton, InputAdornment, TextField } from "@mui/material";
 import { useEffect, useState } from "react";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { Close } from "@mui/icons-material";
 import EstimatePointCard from "./EstimatePointCard";
 import { Deck } from "../models/game";
 import { notMultiSpace, notStartWithSpace, pressEnter, setValue } from "../utils/input";
 
-export default function CreateCustomDeck(props: {onSubmit: (value: Deck) => Promise<void>, onClose: () => void}) {
+export default function CreateCustomDeck(props: {onSubmit: (value: Deck) => Promise<void>, onClose: (event: 'close' | 'back') => void}) {
     const defaultDeckValues = ['1', '2', '3', '4', '5', '8', '13'];
     const [deckName, setDeckName] = useState('My custom deck');
     const [deckValues, setDeckValues] = useState(defaultDeckValues.join(','));
@@ -61,8 +62,19 @@ export default function CreateCustomDeck(props: {onSubmit: (value: Deck) => Prom
         <>
             <DialogTitle>
                 <div className="flex items-center gap-4">
-                    <ArrowBackIcon onClick={props.onClose} className="cursor-pointer" />
-                    <div>Create Custom Deck</div>
+                    <div className="flex items-center justify-between gap-4 overflow-hidden w-full">
+                            <ArrowBackIcon onClick={() => props.onClose('back')} className="cursor-pointer" />
+                            <div className="text-ellipsis whitespace-nowrap overflow-hidden w-full">Create Custom Deck</div>
+                            <IconButton
+                                aria-label="close"
+                                color="inherit"
+                                size="small"
+                                onClick={() => props.onClose('close')}
+                                className="w-fit"
+                            >
+                                <Close fontSize="inherit" color="error" />
+                            </IconButton>
+                        </div>
                 </div>
             </DialogTitle>
 
@@ -81,7 +93,7 @@ export default function CreateCustomDeck(props: {onSubmit: (value: Deck) => Prom
                                 endAdornment: !input.endAdornmentText ? undefined : <InputAdornment position="end">{ input.endAdornmentText(input.value) }</InputAdornment>,
                             }}
                             helperText={input.helperText}
-                            onKeyDown={pressEnter(onSubmit)}
+                            onKeyDown={pressEnter(onSubmit, () => props.onClose('close'))}
                             className={!index ? "!mt-2": ""}
                         />
                     );
@@ -108,7 +120,7 @@ export default function CreateCustomDeck(props: {onSubmit: (value: Deck) => Prom
 
             <Divider />
             <DialogActions sx={{padding: '1rem'}}>
-                <Button variant="contained" color="error" onClick={props.onClose}>Cancel</Button>
+                <Button variant="contained" color="error" onClick={() => props.onClose('back')}>Cancel</Button>
                 <Button
                     variant="contained"
                     color="success"

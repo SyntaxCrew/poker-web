@@ -1,9 +1,11 @@
 import React, { ChangeEvent, SetStateAction } from "react";
 
-export function pressEnter(callback: () => void) {
+export function pressEnter(callback: () => void, pressEscape?: () => void) {
     return (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.key === 'Enter') {
             callback();
+        } else if (pressEscape && event.key === 'Escape') {
+            pressEscape();
         }
     }
 }

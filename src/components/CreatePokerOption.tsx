@@ -14,6 +14,8 @@ import { notMultiSpace, notStartWithSpace, pressEnter, setValue } from "../utils
 import { getItem } from "../utils/local-storage";
 
 export default function CreatePokerOption(props: {isOpen: boolean, onSubmit: (result: CreatePokerOptionDialog) => void, onCancel: () => void, profile: UserProfile}) {
+    const defaultDisplayName = "Guest";
+    const defaultRoomName = "Room";
     const defaultDecks: Deck[] = [
         {
             deckName: 'Fibonacci',
@@ -24,7 +26,6 @@ export default function CreatePokerOption(props: {isOpen: boolean, onSubmit: (re
             deckValues: ['0', '0.5', '1', '1.5', '2', '2.5', '3', '4', '5', '6', '7', '?', '☕'],
         },
     ]
-
     const defaultOption: PokerOption = {
         estimateOptions: defaultDecks[0].deckValues,
         autoRevealCards: true,
@@ -34,8 +35,8 @@ export default function CreatePokerOption(props: {isOpen: boolean, onSubmit: (re
         showAverage: true,
     };
 
-    const [roomName, setRoomName] = useState('');
-    const [displayName, setDisplayName] = useState('');
+    const [roomName, setRoomName] = useState(defaultRoomName);
+    const [displayName, setDisplayName] = useState(defaultDisplayName);
     const [isSpectator, setSpectator] = useState(false);
     const [estimateOptionIndex, setEstimateOptionIndex] = useState(0);
     const [estimateOptions, setEstimateOptions] = useState<Deck[]>([...defaultDecks]);
@@ -52,7 +53,7 @@ export default function CreatePokerOption(props: {isOpen: boolean, onSubmit: (re
             if (props.profile.userUUID) {
                 setEstimateOptions([...defaultDecks, ...(await customDecks())]);
             }
-            setDisplayName(props.profile.displayName || '');
+            setDisplayName(props.profile.displayName || defaultDisplayName);
         }
     }, [props.profile]);
 
@@ -124,11 +125,12 @@ export default function CreatePokerOption(props: {isOpen: boolean, onSubmit: (re
     function onClose() {
         setTimeout(() => {
             setShowCollapse(false);
-            setRoomName('');
-            setDisplayName(props.profile.displayName || '');
+            setRoomName(defaultRoomName);
+            setDisplayName(props.profile.displayName || defaultDisplayName);
             setSpectator(false);
             setEstimateOptionIndex(0);
             setPokerOption({...defaultOption});
+            setShowCreateCustomDeck(false);
         }, 200);
         props.onCancel();
     }
@@ -197,7 +199,19 @@ export default function CreatePokerOption(props: {isOpen: boolean, onSubmit: (re
 
             <Dialog open={props.isOpen} fullWidth>
                 {!isShowCreateCustomDeck && <>
-                    <DialogTitle>Game Option</DialogTitle>
+                    <DialogTitle>
+                        <div className="flex items-center justify-between gap-4 overflow-hidden">
+                            <div className="text-ellipsis whitespace-nowrap overflow-hidden">Game Option</div>
+                            <IconButton
+                                aria-label="close"
+                                color="inherit"
+                                size="small"
+                                onClick={onClose}
+                            >
+                                <Close fontSize="inherit" color="error" />
+                            </IconButton>
+                        </div>
+                    </DialogTitle>
 
                     <DialogContent className="flex flex-col gap-4 !max-w-2xl !w-full relative">
                         {inputs.map((input, index) => {
@@ -210,7 +224,7 @@ export default function CreatePokerOption(props: {isOpen: boolean, onSubmit: (re
                                     label={input.label}
                                     value={input.value}
                                     onChange={input.onChange}
-                                    onKeyDown={pressEnter(onSubmit)}
+                                    onKeyDown={pressEnter(onSubmit, onClose)}
                                     InputProps={{
                                         endAdornment: <InputAdornment position="end">{ input.endAdornmentText(input.value) }</InputAdornment>,
                                     }}
@@ -264,7 +278,7 @@ export default function CreatePokerOption(props: {isOpen: boolean, onSubmit: (re
 
                 {isShowCreateCustomDeck && <CreateCustomDeck
                     onSubmit={addCustomDeck}
-                    onClose={() => setShowCreateCustomDeck(false)}
+                    onClose={event => event === 'close' ? onClose() : setShowCreateCustomDeck(false)}
                 />}
             </Dialog>
         </>
