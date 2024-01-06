@@ -1,11 +1,12 @@
 import { ChangeEvent, useEffect, useState } from "react";
 import { Button, Collapse, Dialog, DialogActions, DialogContent, DialogTitle, Divider, MenuItem, Switch, TextField } from "@mui/material";
+import CreateCustomDeck from "./CreateCustomDeck";
+import { Deck } from "../models/my-game";
 import { CreatePokerOptionDialog, PokerOption } from "../models/poker";
 import { setValue } from "../utils/input";
-import CreateCustomDeck from "./CreateCustomDeck";
 
 export default function CreatePokerOption(props: {isOpen: boolean, onSubmit: (result: CreatePokerOptionDialog) => void, onCancel: () => void, displayName?: string}) {
-    const [estimateOptions, setEstimateOptions] = useState([
+    const [estimateOptions, setEstimateOptions] = useState<Deck[]>([
         {
             deckName: 'Fibonacci',
             deckValues: ['0', '1', '2', '3', '5', '8', '13', '21', '34', '55', '89', '?', '☕'],

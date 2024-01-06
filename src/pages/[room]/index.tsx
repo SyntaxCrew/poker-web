@@ -3,8 +3,8 @@ import { useBeforeUnload, useNavigate, useParams } from "react-router-dom";
 import PokerLogo from '/images/poker.png';
 import EstimatePointCard from "../../components/EstimatePointCard";
 import UserCard from "../../components/UserCard";
-import { clearUsers, joinGame, joinPokerRoom, leavePokerRoom, updateEstimateStatus, pokeCard } from '../../firebase/poker';
-import { getUserProfile } from '../../firebase/user';
+import { clearUsers, joinGame, joinPokerRoom, leavePokerRoom, updateEstimateStatus, pokeCard } from '../../repository/firestore/poker';
+import { getUserProfile } from '../../repository/firestore/user';
 import { EstimateStatus, Poker } from "../../models/poker";
 import { UserProfile } from '../../models/user';
 

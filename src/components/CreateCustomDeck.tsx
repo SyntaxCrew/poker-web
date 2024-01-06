@@ -2,9 +2,10 @@ import { Button, DialogActions, DialogContent, DialogTitle, Divider, TextField }
 import { useEffect, useState } from "react";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EstimatePointCard from "./EstimatePointCard";
+import { Deck } from "../models/my-game";
 import { pressEnter, setValue } from "../utils/input";
 
-export default function CreateCustomDeck(props: {onSubmit: (value: {deckName: string, deckValues: string[]}) => void, onClose: () => void}) {
+export default function CreateCustomDeck(props: {onSubmit: (value: Deck) => void, onClose: () => void}) {
     const defaultDeckValues = ['1', '2', '3', '4', '5', '8', '13'];
     const [deckName, setDeckName] = useState('My custom deck');
     const [deckValues, setDeckValues] = useState(defaultDeckValues.join(','));

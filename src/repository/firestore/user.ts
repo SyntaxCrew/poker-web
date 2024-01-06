@@ -1,10 +1,10 @@
-import { Timestamp, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
-import { getCurrentUser } from "./authentication";
-import firestore from "./firestore";
-import { converter } from "../models/firestore";
-import { User, UserProfile } from "../models/user";
-import { randomString } from "../utils/generator";
 import { updateProfile } from "firebase/auth";
+import { Timestamp, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { getCurrentUser } from "../../firebase/authentication";
+import firestore from "../../firebase/firestore";
+import { converter } from "../../models/firestore";
+import { User, UserProfile } from "../../models/user";
+import { randomString } from "../../utils/generator";
 
 const userCollection = "user";
 const userDoc = (userUID: string) => doc(firestore, userCollection, userUID).withConverter(converter<User>());

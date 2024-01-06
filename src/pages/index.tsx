@@ -7,8 +7,8 @@ import CreatePokerOption from '../components/CreatePokerOption';
 import GoogleButton from '../components/GoogleButton';
 import LoadingScreen from '../components/LoadingScreen';
 import { signInGoogle, signout } from '../firebase/authentication';
-import { createPokerRoom, isExistsPokerRoom } from '../firebase/poker';
-import { getUserProfile } from '../firebase/user';
+import { createPokerRoom, isExistsPokerRoom } from '../repository/firestore/poker';
+import { getUserProfile, signin } from '../repository/firestore/user';
 import { UserProfile } from '../models/user';
 import { CreatePokerOptionDialog } from '../models/poker';
 import { pressEnter, setValue } from '../utils/input';
@@ -60,10 +60,19 @@ export default function HomePage() {
 
     async function signInWithGoogle() {
         setLoading(true);
-        await signInGoogle();
-        await setUserProfile();
+        const user = await signInGoogle();
+        if (user) {
+            await signin({
+                userUID: user.uid,
+                email: user.email || undefined,
+                displayName: user.displayName || '',
+                isAnonymous: false,
+                isLinkGoogle: true,
+            });
+            await setUserProfile();
+            setAlert({message: 'Sign in with google successfully', severity: 'success', isShow: true});
+        }
         setLoading(false);
-        setAlert({message: 'Sign in with google successfully', severity: 'success', isShow: true});
     }
 
     async function signOut() {

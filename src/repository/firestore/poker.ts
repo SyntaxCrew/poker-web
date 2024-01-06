@@ -1,10 +1,10 @@
 import { DocumentData, onSnapshot, doc, setDoc, getDoc, DocumentSnapshot, updateDoc, arrayUnion, arrayRemove, FieldValue, deleteField, Timestamp } from "firebase/firestore";
-import firestore from "./firestore";
-import { converter } from "../models/firestore";
-import { Map } from "../models/generic";
-import { EstimateStatus, Poker, PokerHistory, PokerOption } from "../models/poker";
-import { randomString } from "../utils/generator";
-import { timeDiffString } from "../utils/time";
+import firestore from "../../firebase/firestore";
+import { converter } from "../../models/firestore";
+import { Map } from "../../models/generic";
+import { EstimateStatus, Poker, PokerHistory, PokerOption } from "../../models/poker";
+import { randomString } from "../../utils/generator";
+import { timeDiffString } from "../../utils/time";
 
 const pokerCollection = "poker";
 const pokerDoc = (roomID: string) => doc(firestore, pokerCollection, roomID).withConverter(converter<Poker>());
