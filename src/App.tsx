@@ -23,7 +23,7 @@ function App() {
 
   const location = useLocation();
 
-  const [isLoading, setLoading] = useState<boolean>(true);
+  const [isLoading, setLoading] = useState<boolean>(false);
   const [alert, setAlert] = useState<AlertModel>({isShow: false, message: '', severity: 'info'});
   const [profile, setProfile] = useState<UserProfile>({isAnonymous: true, userUUID: '', sessionUUID: '', displayName: ''});
   const [poker, setPoker] = useState<Poker>();
@@ -32,7 +32,6 @@ function App() {
     const user = await getUserProfile();
     if (user) {
       setProfile(user);
-      setLoading(false);
     }
   }, []);
 

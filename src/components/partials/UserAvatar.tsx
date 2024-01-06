@@ -3,12 +3,14 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Divider, ListItemIcon, ListItemText, Menu, MenuItem, Typography } from "@mui/material";
 import { CollectionsBookmark, Logout, Login, PersonAdd, ManageAccounts } from '@mui/icons-material';
 import Avatar from "./Avatar";
+import ProfileDialog from "../dialog/ProfileDialog";
+import SigninDialog from "../dialog/SigninDialog";
+import SignupDialog from "../dialog/SignupDialog";
 import SignoutDialog from "../dialog/SignoutDialog";
 import GlobalContext from "../../context/global";
 import { UserProfile } from "../../models/user";
-import { signInGoogle, signout } from "../../firebase/authentication";
-import { getUserProfile, signin, updateUserProfile } from "../../repository/firestore/user";
-import ProfileDialog from "../dialog/ProfileDialog";
+import { signout } from "../../firebase/authentication";
+import { getUserProfile, updateUserProfile } from "../../repository/firestore/user";
 
 export default function UserAvatar() {
     const { setLoading, alert, setProfile, profile } = useContext(GlobalContext);
@@ -17,8 +19,7 @@ export default function UserAvatar() {
     const location = useLocation();
 
     const [isOpenMenu, setOpenMenu] = useState(false);
-    const [isOpenLogoutDialog, setOpenLogoutDialog] = useState(false);
-    const [isOpenUserDialog, setOpenUserDialog] = useState(false);
+    const [openDialog, setOpenDialog] = useState<'profile' | 'signin' | 'signup' | 'signout' | 'close'>('close');
 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
@@ -43,7 +44,7 @@ export default function UserAvatar() {
             {
                 prefixIcon: <ManageAccounts fontSize="small" />,
                 text: 'Profile',
-                onClick: () => setOpenUserDialog(true),
+                onClick: () => setOpenDialog('profile'),
             },
         ],
         [
@@ -51,19 +52,19 @@ export default function UserAvatar() {
                 prefixIcon: <Login fontSize="small" />,
                 text: 'Signin',
                 hasMenu: (profile: UserProfile) => profile.isAnonymous,
-                onClick: signInWithGoogle, // temp
+                onClick: () => setOpenDialog('signin'),
             },
             {
                 prefixIcon: <PersonAdd fontSize="small" />,
                 text: 'Signup',
                 hasMenu: (profile: UserProfile) => profile.isAnonymous,
-                onClick: signInWithGoogle, // temp
+                onClick: () => setOpenDialog('signup'),
             },
             {
                 prefixIcon: <Logout fontSize="small" />,
                 text: 'Signout',
                 hasMenu: (profile: UserProfile) => !profile.isAnonymous,
-                onClick: () => setOpenLogoutDialog(true),
+                onClick: () => setOpenDialog('signout'),
             },
         ],
     ];
@@ -82,32 +83,7 @@ export default function UserAvatar() {
             alert({message: 'Update profile failed, please try again!', severity: 'error'});
         }
         setLoading(false);
-        setOpenUserDialog(false);
-    }
-
-    async function signInWithGoogle() {
-        setLoading(true);
-        try {
-            const user = await signInGoogle();
-            if (user) {
-                await signin({
-                    userUID: user.uid,
-                    email: user.email || undefined,
-                    displayName: user.displayName || '',
-                    isAnonymous: false,
-                    isLinkGoogle: true,
-                });
-                const userProfile = await getUserProfile();
-                if (!userProfile) {
-                    throw Error('user not found')
-                }
-                setProfile(userProfile);
-                alert({message: 'Sign in with google successfully', severity: 'success'});
-            }
-        } catch (error) {
-            // Maybe error is `auth/popup-closed-by-user`, so skip alert
-        }
-        setLoading(false);
+        setOpenDialog('close');
     }
 
     async function signOut() {
@@ -126,7 +102,7 @@ export default function UserAvatar() {
         } catch (error) {
             alert({message: 'Sign out failed', severity: 'error'});
         }
-        setOpenLogoutDialog(false);
+        setOpenDialog('close');
         setLoading(false);
     }
 
@@ -184,8 +160,10 @@ export default function UserAvatar() {
                 })}
             </Menu>
 
-            <ProfileDialog open={isOpenUserDialog} profile={profile} onSubmit={updateProfile} onClose={() => setOpenUserDialog(false)} />
-            <SignoutDialog open={isOpenLogoutDialog} onSubmit={signOut} onClose={() => setOpenLogoutDialog(false)} />
+            <ProfileDialog open={openDialog === 'profile'} profile={profile} onSubmit={updateProfile} onClose={() => setOpenDialog('close')} />
+            <SigninDialog open={openDialog === 'signin'} onClose={() => setOpenDialog('close')} />
+            <SignupDialog open={openDialog === 'signup'} onClose={() => setOpenDialog('close')} />
+            <SignoutDialog open={openDialog === 'signout'} onSubmit={signOut} onClose={() => setOpenDialog('close')} />
         </>
     );
 }

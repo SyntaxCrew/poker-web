@@ -1,43 +1,20 @@
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, TextField, Divider, Card, Box, CircularProgress } from '@mui/material';
+import { Button, TextField, Card, Box, CircularProgress } from '@mui/material';
 import ScrumPokerImg from '/images/estimation.png';
 import GlobalContext from '../context/global';
-import CreatePokerOption from '../components/partials/CreatePokerOption';
-import GoogleButton from '../components/partials/GoogleButton';
-import { signInGoogle, signout } from '../firebase/authentication';
+import CreatePokerOption from '../components/dialog/CreatePokerOptionDialog';
 import { createPokerRoom, isExistsPokerRoom } from '../repository/firestore/poker';
-import { getUserProfile, signin } from '../repository/firestore/user';
 import { CreatePokerOptionDialog } from '../models/poker';
 import { pressEnter, setValue } from '../utils/input';
 
 export default function HomePage() {
-    const { profile, setProfile, alert, setLoading, isLoading } = useContext(GlobalContext);
+    const { profile, alert, setLoading, isLoading } = useContext(GlobalContext);
     const navigate = useNavigate();
 
     const [roomID, setRoomID] = useState('');
     const [isFindRoom, setFindRoom] = useState(false);
     const [isCreateRoom, setCreateRoom] = useState(false);
-
-    async function setUserProfile() {
-        try {
-            const user = await getUserProfile();
-            if (!user) {
-                throw Error('user not found')
-            }
-            setProfile(user);
-        } catch (error) {
-            alert({message: 'Failed to get user profile', severity: 'error'});
-        }
-    }
-
-    useEffect(() => {
-        init();
-        async function init() {
-            await setUserProfile();
-            setLoading(false);
-        }
-    }, []);
 
     async function joinRoom() {
         if (!roomID) {
@@ -67,39 +44,6 @@ export default function HomePage() {
             }
             setLoading(false);
         }
-    }
-
-    async function signInWithGoogle() {
-        setLoading(true);
-        try {
-            const user = await signInGoogle();
-            if (user) {
-                await signin({
-                    userUID: user.uid,
-                    email: user.email || undefined,
-                    displayName: user.displayName || 'User',
-                    isAnonymous: false,
-                    isLinkGoogle: true,
-                });
-                await setUserProfile();
-                alert({message: 'Sign in with google successfully', severity: 'success'});
-            }
-        } catch (error) {
-            // Maybe error is `auth/popup-closed-by-user`, so skip alert
-        }
-        setLoading(false);
-    }
-
-    async function signOut() {
-        setLoading(true);
-        try {
-            await signout();
-            await setUserProfile();
-            alert({message: 'Sign out successfully', severity: 'success'});
-        } catch (error) {
-            alert({message: 'Sign out failed', severity: 'error'});
-        }
-        setLoading(false);
     }
 
     return (
@@ -151,10 +95,6 @@ export default function HomePage() {
                             >
                                 New game
                             </Button>
-
-                            <Divider></Divider>
-
-                            <GoogleButton profile={profile} onSignin={signInWithGoogle} onSignout={signOut} disabled={isLoading || isFindRoom} />
                         </Card>
                     </div>
                 </div>

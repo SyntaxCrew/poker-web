@@ -1,7 +1,8 @@
 import { ChangeEvent, MouseEvent, useContext, useEffect, useState } from "react";
-import { Button, Collapse, Dialog, DialogActions, DialogContent, DialogTitle, Divider, IconButton, InputAdornment, MenuItem, Switch, TextField } from "@mui/material";
+import { Button, Collapse, Dialog, DialogActions, DialogContent, Divider, IconButton, InputAdornment, MenuItem, Switch, TextField } from "@mui/material";
 import Close from '@mui/icons-material/Close';
-import CreateCustomDeck from "../shared/CreateCustomDeck";
+import CreateCustomDeck from "./CreateCustomDeckDialog";
+import HeaderDialog from "./HeaderDialog";
 import GlobalContext from "../../context/global";
 import { Deck } from "../../models/game";
 import { AnonymousLocalStorageKey } from "../../models/key";
@@ -195,19 +196,7 @@ export default function CreatePokerOption(props: {isOpen: boolean, onSubmit: (re
         <>
             <Dialog open={props.isOpen} fullWidth>
                 {!isShowCreateCustomDeck && <>
-                    <DialogTitle>
-                        <div className="flex items-center justify-between gap-4 overflow-hidden">
-                            <div className="text-ellipsis whitespace-nowrap overflow-hidden">Game Option</div>
-                            <IconButton
-                                aria-label="close"
-                                color="inherit"
-                                size="small"
-                                onClick={onClose}
-                            >
-                                <Close fontSize="inherit" color="error" />
-                            </IconButton>
-                        </div>
-                    </DialogTitle>
+                    <HeaderDialog title='Game Option' onClose={onClose} />
 
                     <DialogContent className="flex flex-col gap-4 !max-w-2xl !w-full relative">
                         {inputs.map((input, index) => {

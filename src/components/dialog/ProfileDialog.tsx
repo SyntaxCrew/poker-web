@@ -1,6 +1,7 @@
 import { ChangeEvent, useEffect, useRef, useState } from "react"
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider, IconButton, TextField } from "@mui/material"
-import { Close, Edit } from "@mui/icons-material";
+import { Button, Dialog, DialogActions, DialogContent, Divider, TextField } from "@mui/material"
+import { Edit } from "@mui/icons-material";
+import HeaderDialog from "./HeaderDialog";
 import Avatar from "../partials/Avatar";
 import { UserProfile } from "../../models/user"
 import { pressEnter, setValue } from "../../utils/input";
@@ -38,21 +39,7 @@ export default function ProfileDialog(props: {open: boolean, profile: UserProfil
 
     return (
         <Dialog open={props.open} onClose={onClose} maxWidth='xs' fullWidth>
-            <DialogTitle>
-                <div className="flex items-center justify-between gap-4 overflow-hidden">
-                    <div className="text-ellipsis whitespace-nowrap overflow-hidden">Edit your display information</div>
-                    <IconButton
-                        aria-label="close"
-                        color="inherit"
-                        size="small"
-                        onClick={onClose}
-                    >
-                        <Close fontSize="inherit" color="error" />
-                    </IconButton>
-                </div>
-            </DialogTitle>
-
-            <Divider />
+            <HeaderDialog title="Edit your display information" onClose={props.onClose} />
             <DialogContent>
                 <div className="flex flex-col items-center gap-4">
                     <input ref={inputFileRef} type="file" accept="image/*" hidden onChange={updateProfileImage} />
