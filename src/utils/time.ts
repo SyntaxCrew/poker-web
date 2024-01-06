@@ -5,7 +5,6 @@
  * @returns Difference time in format hh:mm:ss
  */
 export function timeDiffString(start: Date, end: Date) {
-    console.log(start, end)
     let diff = Math.abs(end.getTime() - start.getTime());
 
     const ms = diff % 1000;
