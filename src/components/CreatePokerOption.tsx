@@ -97,62 +97,65 @@ export default function CreatePokerOption(props: {isOpen: boolean, onSubmit: (re
 
     return (
         <>
-            <Dialog open={props.isOpen} onClose={onClose} className={isShowCreateCustomDeck ? 'opacity-0' : ''}>
-                <DialogTitle>Game Option</DialogTitle>
-                <DialogContent className="flex flex-col gap-4 !max-w-2xl !w-full relative">
-                    <TextField
-                        fullWidth
-                        variant='outlined'
-                        placeholder='Enter Display Name'
-                        label="Display's Name"
-                        value={displayName}
-                        onChange={setValue(setDisplayName)}
-                        className="!mt-2"
-                    />
-                    <TextField
-                        fullWidth
-                        variant='outlined'
-                        placeholder='Enter Room Name'
-                        label="Room's Name"
-                        value={roomName}
-                        onChange={setValue(setRoomName)}
-                    />
-                    <TextField select label="Voting system" value={estimateOptionIndex} onChange={e => Number(e.target.value) !== -1 && setEstimateOptionIndex(Number(e.target.value))}>
-                        {estimateOptions.map((estimate, index) => {
-                            return (
-                                <MenuItem key={index} value={index}>{ `${estimate.deckName} ( ${estimate.deckValues.join(', ')} )` }</MenuItem>
-                            );
-                        })}
-                        <MenuItem value={-1} onClick={() => setTimeout(() => setShowCreateCustomDeck(true), 200)}><div className="text-blue-500">Create Custom Deck</div></MenuItem>
-                    </TextField>
+            <Dialog open={props.isOpen} fullWidth>
+                {!isShowCreateCustomDeck && <>
+                    <DialogTitle>Game Option</DialogTitle>
 
-                    {!isShowCollapse && <div className="text-blue-500 hover:text-blue-600 cursor-pointer -mb-4" onClick={() => setShowCollapse(true)}>Show advanced settings...</div>}
-                    <Collapse in={isShowCollapse} >
-                        {optionList.map((option, index) => {
-                            return (
-                                <div className={"flex items-center justify-between gap-4" + (index ? ' mt-4' : '')} key={index}>
-                                    <div className="flex flex-col">
-                                        <label htmlFor="auto-reveal" className="font-bold">{ option.title }</label>
-                                        <span className="text-gray-500">{ option.description }</span>
+                    <DialogContent className="flex flex-col gap-4 !max-w-2xl !w-full relative">
+                        <TextField
+                            fullWidth
+                            variant='outlined'
+                            placeholder='Enter Display Name'
+                            label="Display's Name"
+                            value={displayName}
+                            onChange={setValue(setDisplayName)}
+                            className="!mt-2"
+                        />
+                        <TextField
+                            fullWidth
+                            variant='outlined'
+                            placeholder='Enter Room Name'
+                            label="Room's Name"
+                            value={roomName}
+                            onChange={setValue(setRoomName)}
+                        />
+                        <TextField select label="Voting system" value={estimateOptionIndex} onChange={e => Number(e.target.value) !== -1 && setEstimateOptionIndex(Number(e.target.value))}>
+                            {estimateOptions.map((estimate, index) => {
+                                return (
+                                    <MenuItem key={index} value={index}>{ `${estimate.deckName} ( ${estimate.deckValues.join(', ')} )` }</MenuItem>
+                                );
+                            })}
+                            <MenuItem value={-1} onClick={() => setShowCreateCustomDeck(true)}><div className="text-blue-500 font-bold">Create custom deck...</div></MenuItem>
+                        </TextField>
+
+                        {!isShowCollapse && <div className="text-blue-500 hover:text-blue-600 cursor-pointer -mb-4" onClick={() => setShowCollapse(true)}>Show advanced settings...</div>}
+                        <Collapse in={isShowCollapse} >
+                            {optionList.map((option, index) => {
+                                return (
+                                    <div className={"flex items-center justify-between gap-4" + (index ? ' mt-4' : '')} key={index}>
+                                        <div className="flex flex-col">
+                                            <label htmlFor="auto-reveal" className="font-bold">{ option.title }</label>
+                                            <span className="text-gray-500">{ option.description }</span>
+                                        </div>
+                                        <Switch checked={option.value} onChange={option.setValue} />
                                     </div>
-                                    <Switch checked={option.value} onChange={option.setValue} />
-                                </div>
-                            );
-                        })}
-                    </Collapse>
-                </DialogContent>
-                <Divider />
-                <DialogActions sx={{padding: '1rem'}}>
-                    <Button variant="contained" color="error" onClick={onClose}>Cancel</Button>
-                    <Button variant="contained" color="success" onClick={onSubmit} disabled={displayName.trim().length === 0 || roomName.trim().length === 0}>Create Room</Button>
-                </DialogActions>
-            </Dialog>
+                                );
+                            })}
+                        </Collapse>
+                    </DialogContent>
 
-            <CreateCustomDeck
-                isShow={isShowCreateCustomDeck}
-                onSubmit={deck => {setShowCreateCustomDeck(false); setEstimateOptions([...estimateOptions, deck]);}}
-                onClose={() => setShowCreateCustomDeck(false)}
-            />
+                    <Divider />
+                    <DialogActions sx={{padding: '1rem'}}>
+                        <Button variant="contained" color="error" onClick={onClose}>Cancel</Button>
+                        <Button variant="contained" color="success" onClick={onSubmit} disabled={displayName.trim().length === 0 || roomName.trim().length === 0}>Create Room</Button>
+                    </DialogActions>
+                </>}
+
+                {isShowCreateCustomDeck && <CreateCustomDeck
+                    onSubmit={deck => {setShowCreateCustomDeck(false); setEstimateOptions([...estimateOptions, deck]);}}
+                    onClose={() => setShowCreateCustomDeck(false)}
+                />}
+            </Dialog>
         </>
     )
 }
