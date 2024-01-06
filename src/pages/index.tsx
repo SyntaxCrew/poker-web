@@ -77,7 +77,7 @@ export default function HomePage() {
                 await signin({
                     userUID: user.uid,
                     email: user.email || undefined,
-                    displayName: user.displayName || '',
+                    displayName: user.displayName || 'User',
                     isAnonymous: false,
                     isLinkGoogle: true,
                 });

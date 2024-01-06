@@ -16,7 +16,7 @@ export async function getUserProfile(): Promise<UserProfile | undefined> {
             return {
                 userUUID: currentUser.uid,
                 email: currentUser.email ?? undefined,
-                displayName: currentUser.displayName ?? undefined,
+                displayName: currentUser.displayName || 'Guest',
                 isAnonymous: currentUser.isAnonymous,
                 sessionUUID: randomString(20),
             };

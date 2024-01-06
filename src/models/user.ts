@@ -1,7 +1,7 @@
 import { Timestamp } from "firebase/firestore"
 
 export interface UserProfile {
-    displayName?: string
+    displayName: string
     userUUID: string
     email?: string
     imageURL?: string
@@ -12,7 +12,7 @@ export interface UserProfile {
 export interface User {
     userUID: string
     email?: string
-    displayName?: string
+    displayName: string
     isAnonymous: boolean
     isLinkGoogle: boolean
     imageURL?: string

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useBeforeUnload, useNavigate, useParams } from "react-router-dom";
+import { Link, useBeforeUnload, useNavigate, useParams } from "react-router-dom";
 import PokerLogo from '/images/poker.png';
 import EstimatePointCard from "../../components/shared/EstimatePointCard";
 import UserCard from "../../components/partials/UserCard";
@@ -13,7 +13,7 @@ export default function PokerRoomPage() {
     const navigate = useNavigate();
     const [isLoading, setLoading] = useState(true);
     const [poker, setPoker] = useState<Poker>();
-    const [profile, setProfile] = useState<UserProfile>({isAnonymous: true, userUUID: '', sessionUUID: ''});
+    const [profile, setProfile] = useState<UserProfile>({isAnonymous: true, userUUID: '', sessionUUID: '', displayName: ''});
     const [currentEstimatePoint, setCurrentEstimatePoint] = useState<string>();
     const [countdown, setCountdown] = useState(0);
     const [isCountingDown, setCountingDown] = useState(false);
@@ -161,9 +161,9 @@ export default function PokerRoomPage() {
         <>
             <div className="flex items-center justify-between px-2 sm:px-4 h-20 bg-blue-200">
                 <div className="flex items-center gap-2">
-                    <a href="/">
+                    <Link to="/">
                         <img src={PokerLogo} className="w-10 h-10" alt="Poker logo" />
-                    </a>
+                    </Link>
                     <span className="text-black">{ room }</span>
                 </div>
                 { !isLoading && poker &&
