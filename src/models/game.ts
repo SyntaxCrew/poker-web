@@ -8,7 +8,8 @@ export interface Game {
 }
 
 export interface Deck {
-    deckID?: string
+    deckID: string
     deckName: string
     deckValues: string[]
+    isDefault: boolean
 }

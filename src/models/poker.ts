@@ -1,5 +1,6 @@
 import { Timestamp } from "firebase/firestore"
 import { Map } from "./generic"
+import { Deck } from "./game"
 
 export type EstimateStatus = 'CLOSED' | 'OPENED' | 'OPENING'
 
@@ -26,12 +27,15 @@ export interface PokerUser {
 }
 
 export interface PokerOption {
-    estimateOptions: string[]
     allowOthersToShowEstimates: boolean
     allowOthersToDeleteEstimates: boolean
     allowOthersToClearUsers: boolean
     autoRevealCards: boolean
     showAverage: boolean
+    estimateOption: {
+        decks: Deck[]
+        activeDeckID: string
+    }
 }
 
 export interface PokerHistory {
@@ -53,5 +57,12 @@ export interface CreatePokerOptionDialog {
     roomName: string
     displayName: string
     isSpectator: boolean
+    option: PokerOption
+}
+
+export interface UpdatePokerOptionDialog {
+    roomName: string
+    oldFacilitatorUUID: string
+    newFacilitatorUUID: string
     option: PokerOption
 }

@@ -3,6 +3,7 @@ import { Button, Collapse, Dialog, DialogActions, DialogContent, Divider, IconBu
 import Close from '@mui/icons-material/Close';
 import CreateCustomDeck from "./CreateCustomDeckDialog";
 import HeaderDialog from "./HeaderDialog";
+import { maximumDisplayNameLength, maximumRoomNameLength } from "../../constant/maximum-length";
 import GlobalContext from "../../context/global";
 import { Deck } from "../../models/game";
 import { AnonymousLocalStorageKey } from "../../models/key";
@@ -18,24 +19,31 @@ export default function CreatePokerRoomDialog(props: {isOpen: boolean, onSubmit:
 
     const defaultDisplayName = "Guest";
     const defaultRoomName = "Room";
-    const defaultDecks: Deck[] = [
+    const [ defaultDecks ] = useState<Deck[]>([
         {
+            deckID: randomString(20),
             deckName: 'Fibonacci',
             deckValues: ['0', '1', '2', '3', '5', '8', '13', '21', '34', '55', '89', '?', '☕'],
+            isDefault: true,
         },
         {
+            deckID: randomString(20),
             deckName: 'Manday',
             deckValues: ['0', '0.5', '1', '1.5', '2', '2.5', '3', '4', '5', '6', '7', '?', '☕'],
+            isDefault: true,
         },
-    ]
-    const defaultOption: PokerOption = {
-        estimateOptions: defaultDecks[0].deckValues,
+    ]);
+    const [ defaultOption ] = useState<PokerOption>({
+        estimateOption: {
+            decks: [...defaultDecks],
+            activeDeckID: defaultDecks[0].deckID,
+        },
         autoRevealCards: true,
         allowOthersToShowEstimates: true,
         allowOthersToClearUsers: false,
         allowOthersToDeleteEstimates: false,
         showAverage: true,
-    };
+    });
 
     const [roomName, setRoomName] = useState(defaultRoomName);
     const [displayName, setDisplayName] = useState(defaultDisplayName);
@@ -64,15 +72,15 @@ export default function CreatePokerRoomDialog(props: {isOpen: boolean, onSubmit:
             placeholder: 'Enter Display Name',
             label: "Display's Name",
             value: displayName,
-            onChange: setValue(setDisplayName, { maximum: 100, others: [notStartWithSpace, notMultiSpace] }),
-            endAdornmentText: (value: string) => `${value.length}/100`,
+            onChange: setValue(setDisplayName, { maximum: maximumDisplayNameLength, others: [notStartWithSpace, notMultiSpace] }),
+            endAdornmentText: (value: string) => `${value.length}/${maximumDisplayNameLength}`,
         },
         {
             placeholder: 'Enter Room Name',
             label: "Room's Name",
             value: roomName,
-            onChange: setValue(setRoomName, { maximum: 30, others: [notStartWithSpace, notMultiSpace] }),
-            endAdornmentText: (value: string) => `${value.length}/30`,
+            onChange: setValue(setRoomName, { maximum: maximumRoomNameLength, others: [notStartWithSpace, notMultiSpace] }),
+            endAdornmentText: (value: string) => `${value.length}/${maximumRoomNameLength}`,
         },
     ]
 
@@ -119,7 +127,18 @@ export default function CreatePokerRoomDialog(props: {isOpen: boolean, onSubmit:
         if (displayName.trim().length === 0 || roomName.trim().length === 0) {
             return;
         }
-        props.onSubmit({displayName: displayName.trim(), isSpectator, option: {...pokerOption, estimateOptions: estimateOptions[estimateOptionIndex].deckValues}, roomName: roomName.trim()})
+        props.onSubmit({
+            displayName: displayName.trim(),
+            isSpectator,
+            option: {
+                ...pokerOption,
+                estimateOption: {
+                    activeDeckID: estimateOptions[estimateOptionIndex].deckID,
+                    decks: [...estimateOptions],
+                },
+            },
+            roomName: roomName.trim(),
+        })
     }
 
     function onClose() {
@@ -175,15 +194,13 @@ export default function CreatePokerRoomDialog(props: {isOpen: boolean, onSubmit:
             const selectedDeckID = estimateOptions[estimateOptionIndex].deckID;
             if (props.profile.isAnonymous) {
                 const customDecks = (getItem<Deck[]>(AnonymousLocalStorageKey.CustomDecks, true) || []).filter(d => d.deckID !== deck.deckID);
-                localStorage.setItem(AnonymousLocalStorageKey.CustomDecks, JSON.stringify([...customDecks]))
+                localStorage.setItem(AnonymousLocalStorageKey.CustomDecks, JSON.stringify([...customDecks]));
             } else {
                 await deleteCustomDeck(props.profile.userUUID, deck);
             }
-            const estimates = [...defaultDecks, ...(await customDecks())]
+            const estimates = [...defaultDecks, ...(await customDecks())];
             setEstimateOptions(estimates);
-            if (selectedDeckID) {
-                setEstimateOptionIndex(estimates.findIndex(estimate => estimate.deckID === selectedDeckID))
-            }
+            setEstimateOptionIndex(estimates.findIndex(estimate => estimate.deckID === selectedDeckID));
             alert({message: 'Remove custom deck successfully', severity: 'success'});
         } catch (error) {
             alert({message: 'Remove custom deck failed', severity: 'error'});
@@ -223,7 +240,7 @@ export default function CreatePokerRoomDialog(props: {isOpen: boolean, onSubmit:
                                     <MenuItem key={index} value={index}>
                                         <div className="flex items-center justify-between gap-2 w-full overflow-hidden">
                                             <div className="w-full whitespace-pre-line">{ `${estimate.deckName} ( ${estimate.deckValues.join(', ')} )` }</div>
-                                            {estimate.deckID && estimateOptionIndex !== index && <IconButton
+                                            {!estimate.isDefault && estimateOptionIndex !== index && <IconButton
                                                 aria-label="close"
                                                 color="inherit"
                                                 size="small"

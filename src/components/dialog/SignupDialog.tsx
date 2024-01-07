@@ -22,7 +22,7 @@ export default function SignupDialog(props: {open: boolean, onSubmit?: () => voi
             placeholder: 'Enter your email',
             label: 'Email',
             value: email,
-            onChange: setValue(setEmail, { maximum: 100, others: [noSpace] }),
+            onChange: setValue(setEmail, { others: [noSpace] }),
         },
         {
             type: (isShowPassword: boolean) => isShowPassword ? 'text' : 'password',

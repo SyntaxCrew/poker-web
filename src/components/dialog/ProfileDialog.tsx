@@ -3,6 +3,7 @@ import { Button, Dialog, DialogActions, DialogContent, Divider, InputAdornment, 
 import { Edit } from "@mui/icons-material";
 import HeaderDialog from "./HeaderDialog";
 import Avatar from "../shared/Avatar";
+import { maximumDisplayNameLength } from "../../constant/maximum-length";
 import { UserProfile } from "../../models/user"
 import { notMultiSpace, notStartWithSpace, pressEnter, setValue } from "../../utils/input";
 
@@ -63,10 +64,10 @@ export default function ProfileDialog(props: {open: boolean, profile: UserProfil
                         placeholder='Enter your display name'
                         label='Your display name'
                         value={displayName}
-                        onChange={setValue(setDisplayName, { maximum: 100, others: [notStartWithSpace, notMultiSpace] })}
+                        onChange={setValue(setDisplayName, { maximum: maximumDisplayNameLength, others: [notStartWithSpace, notMultiSpace] })}
                         onKeyDown={pressEnter(onSubmit, onClose)}
                         InputProps={{
-                            endAdornment: <InputAdornment position="end">{ displayName.length }/100</InputAdornment>,
+                            endAdornment: <InputAdornment position="end">{ displayName.length }/{ maximumDisplayNameLength }</InputAdornment>,
                         }}
                     />
 

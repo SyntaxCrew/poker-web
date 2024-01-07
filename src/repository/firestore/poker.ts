@@ -75,6 +75,16 @@ export async function createPokerRoom(userUUID: string, displayName: string, roo
     return roomID;
 }
 
+export async function updatePokerOption(roomID: string, roomName: string, oldFacilitatorUUID: string, newFacilitatorUUID: string, option: PokerOption) {
+    await updateDoc(pokerDoc(roomID), {
+        roomName,
+        option,
+        [`user.${oldFacilitatorUUID}.isFacilitator`]: false,
+        [`user.${newFacilitatorUUID}.isFacilitator`]: true,
+        updatedAt: Timestamp.fromDate(new Date()),
+    });
+}
+
 export async function leavePokerRoom(userUUID: string, sessionUUID: string, roomID: string) {
     return await updateActiveSession(userUUID, sessionUUID, roomID, 'leave');
 }

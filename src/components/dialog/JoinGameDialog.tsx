@@ -3,6 +3,7 @@ import { Button, Dialog, DialogContent, DialogTitle, Divider, InputAdornment, Sw
 import SigninDialog from "./SigninDialog";
 import SignupDialog from "./SignupDialog";
 import SignoutDialog from "./SignoutDialog";
+import { maximumDisplayNameLength } from "../../constant/maximum-length";
 import GlobalContext from "../../context/global";
 import { signout } from "../../firebase/authentication";
 import { getUserProfile } from "../../repository/firestore/user";
@@ -69,10 +70,10 @@ export default function JoinGameDialog(props: {open: boolean, onSubmit?: (displa
                             placeholder='Enter your display name'
                             label='Display name'
                             value={displayName}
-                            onChange={setValue(setDisplayName, { maximum: 100, others: [notStartWithSpace, notMultiSpace] })}
+                            onChange={setValue(setDisplayName, { maximum: maximumDisplayNameLength, others: [notStartWithSpace, notMultiSpace] })}
                             onKeyDown={pressEnter(onSubmit)}
                             InputProps={{
-                                endAdornment: <InputAdornment position="end">{ displayName.length }/100</InputAdornment>,
+                                endAdornment: <InputAdornment position="end">{ displayName.length }/{ maximumDisplayNameLength }</InputAdornment>,
                             }}
                         />
 

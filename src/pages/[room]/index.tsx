@@ -260,7 +260,7 @@ export default function PokerRoomPage() {
             <div className="absolute z-10 bottom-0 w-full p-2 sm:p-4 bg-yellow-200">
                 {poker && poker?.estimateStatus !== 'OPENED' && poker.user[profile.userUUID]?.activeSessions?.length > 0 && !poker.user[profile.userUUID]?.isSpectator &&
                     <div className="flex flex-wrap justify-center items-center gap-3">
-                        {poker?.option.estimateOptions.map(estimatePoint => {
+                        {poker?.option.estimateOption.decks.find(deck => deck.deckID === poker.option.estimateOption.activeDeckID)?.deckValues.map(estimatePoint => {
                             return (
                                 <EstimatePointCard
                                     key={estimatePoint}

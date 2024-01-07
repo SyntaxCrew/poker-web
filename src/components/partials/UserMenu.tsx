@@ -36,7 +36,6 @@ export default function UserMenu() {
                 prefixIcon: <CollectionsBookmark fontSize="small" />,
                 disabled: true,
                 text: 'My Games',
-                suffix: 'N/A',
                 hasMenu: () => true,
             },
             {

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Button, DialogActions, DialogContent, Divider, InputAdornment, TextField } from "@mui/material";
 import HeaderDialog from "./HeaderDialog";
 import EstimatePointCard from "../shared/EstimatePointCard";
+import { maximumDeckNameLength } from "../../constant/maximum-length";
 import { Deck } from "../../models/game";
 import { notMultiSpace, notStartWithSpace, pressEnter, setValue } from "../../utils/input";
 
@@ -34,7 +35,12 @@ export default function CreateCustomDeck(props: {onSubmit: (value: Deck) => Prom
         if (deckName.trim().length === 0 || deckValues.trim().length === 0) {
             return;
         }
-        await props.onSubmit({deckName: deckName.trim(), deckValues: deckValues.trim().split(',')});
+        await props.onSubmit({
+            deckID: '',
+            deckName: deckName.trim(),
+            deckValues: deckValues.trim().split(','),
+            isDefault: false,
+        });
         setDeckName('My custom deck');
         setPreviewCurrentDeckValue(undefined);
         setDeckValues(defaultDeckValues.join(','));
@@ -45,8 +51,8 @@ export default function CreateCustomDeck(props: {onSubmit: (value: Deck) => Prom
             placeholder: 'Enter Deck Name',
             label: "Deck Name",
             value: deckName,
-            onChange: setValue(setDeckName, { maximum: 50, others: [notStartWithSpace, notMultiSpace] }),
-            endAdornmentText: (value: string) => `${value.length}/50`,
+            onChange: setValue(setDeckName, { maximum: maximumDeckNameLength, others: [notStartWithSpace, notMultiSpace] }),
+            endAdornmentText: (value: string) => `${value.length}/${maximumDeckNameLength}`,
         },
         {
             placeholder: 'Enter Deck Values',
