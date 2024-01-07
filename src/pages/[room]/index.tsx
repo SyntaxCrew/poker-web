@@ -228,10 +228,10 @@ export default function PokerRoomPage() {
                             </div>
                         );
                     })}
-                    {poker?.option.showAverage && <div className="ml-2 flex flex-col justify-center items-center">
+                    {poker?.option.showAverage && summary.average && <div className="ml-2 flex flex-col justify-center items-center">
                         <div className="text-gray-500">Average:</div>
                         <div className="text-black font-bold text-xl">
-                            {summary.average.toFixed(2)}
+                            {summary.average.toPrecision(2)}
                         </div>
                     </div>}
                 </div>}
