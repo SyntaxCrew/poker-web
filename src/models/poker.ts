@@ -5,6 +5,7 @@ export type EstimateStatus = 'CLOSED' | 'OPENED' | 'OPENING'
 
 export interface Poker {
     session: string
+    roomID: string
     roomName: string
     issueName?: string
     estimateStatus: EstimateStatus

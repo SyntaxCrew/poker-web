@@ -55,6 +55,7 @@ export async function joinPokerRoom(req: {
 export async function createPokerRoom(userUUID: string, displayName: string, roomName: string, isSpectator: boolean, option: PokerOption): Promise<string> {
     const roomID = randomString(20);
     const poker: Poker = {
+        roomID,
         roomName,
         session: randomString(20),
         estimateStatus: 'CLOSED',

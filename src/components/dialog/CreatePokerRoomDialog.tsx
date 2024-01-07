@@ -13,7 +13,7 @@ import { randomString } from "../../utils/generator";
 import { notMultiSpace, notStartWithSpace, pressEnter, setValue } from "../../utils/input";
 import { getItem } from "../../utils/local-storage";
 
-export default function CreatePokerOption(props: {isOpen: boolean, onSubmit: (result: CreatePokerOptionDialog) => void, onCancel: () => void, profile: UserProfile}) {
+export default function CreatePokerRoomDialog(props: {isOpen: boolean, onSubmit: (result: CreatePokerOptionDialog) => void, onCancel: () => void, profile: UserProfile}) {
     const { setLoading, alert } = useContext(GlobalContext);
 
     const defaultDisplayName = "Guest";

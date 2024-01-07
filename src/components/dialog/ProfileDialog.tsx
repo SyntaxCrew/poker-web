@@ -2,7 +2,7 @@ import { ChangeEvent, useEffect, useRef, useState } from "react"
 import { Button, Dialog, DialogActions, DialogContent, Divider, InputAdornment, TextField } from "@mui/material"
 import { Edit } from "@mui/icons-material";
 import HeaderDialog from "./HeaderDialog";
-import Avatar from "../partials/Avatar";
+import Avatar from "../shared/Avatar";
 import { UserProfile } from "../../models/user"
 import { notMultiSpace, notStartWithSpace, pressEnter, setValue } from "../../utils/input";
 

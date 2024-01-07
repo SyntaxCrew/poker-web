@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button, TextField, Card, Box, CircularProgress, Divider } from '@mui/material';
 import ScrumPokerImg from '/images/estimation.png';
 import GlobalContext from '../context/global';
-import CreatePokerOption from '../components/dialog/CreatePokerOptionDialog';
+import CreatePokerRoomDialog from '../components/dialog/CreatePokerRoomDialog';
 import { createPokerRoom, isExistsPokerRoom } from '../repository/firestore/poker';
 import { CreatePokerOptionDialog } from '../models/poker';
 import { pressEnter, setValue } from '../utils/input';
@@ -101,7 +101,7 @@ export default function HomePage() {
                 </div>
             </div>
 
-            <CreatePokerOption
+            <CreatePokerRoomDialog
                 profile={profile}
                 isOpen={isCreateRoom}
                 onCancel={() => setCreateRoom(false)}

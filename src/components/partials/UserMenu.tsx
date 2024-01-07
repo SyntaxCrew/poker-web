@@ -1,20 +1,22 @@
 import { MouseEvent, useContext, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Divider, ListItemIcon, ListItemText, Menu, MenuItem, Typography } from "@mui/material";
-import { CollectionsBookmark, Logout, Login, PersonAdd, ManageAccounts, Lock } from '@mui/icons-material';
-import Avatar from "./Avatar";
+import { Divider, ListItemIcon, ListItemText, Menu, MenuItem, Switch, Typography } from "@mui/material";
+import { CollectionsBookmark, Logout, Login, PersonAdd, ManageAccounts, Lock, Visibility } from '@mui/icons-material';
 import ProfileDialog from "../dialog/ProfileDialog";
 import ChangePasswordDialog from "../dialog/ChangePasswordDialog";
 import SigninDialog from "../dialog/SigninDialog";
 import SignupDialog from "../dialog/SignupDialog";
 import SignoutDialog from "../dialog/SignoutDialog";
+import Avatar from "../shared/Avatar";
 import GlobalContext from "../../context/global";
+import { Menu as MenuModel } from "../../models/menu";
 import { UserProfile } from "../../models/user";
 import { signout } from "../../firebase/authentication";
+import { joinGame } from "../../repository/firestore/poker";
 import { getUserProfile, updateUserProfile } from "../../repository/firestore/user";
 
 export default function UserMenu() {
-    const { setLoading, alert, setProfile, profile } = useContext(GlobalContext);
+    const { setLoading, alert, setProfile, profile, poker } = useContext(GlobalContext);
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -28,16 +30,7 @@ export default function UserMenu() {
 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
-    interface Menu {
-        prefixIcon: JSX.Element
-        disabled?: boolean
-        text: string
-        suffix?: string | JSX.Element
-        hasMenu?: (profile: UserProfile) => boolean
-        onClick?: () => void
-    }
-
-    const menu: Menu[][] = [
+    const menu: MenuModel[][] = [
         [
             {
                 prefixIcon: <CollectionsBookmark fontSize="small" />,
@@ -45,6 +38,15 @@ export default function UserMenu() {
                 text: 'My Games',
                 suffix: 'N/A',
                 hasMenu: () => true,
+            },
+            {
+                prefixIcon: <Visibility fontSize="small" />,
+                text: 'Spectator Mode',
+                hasMenu: () => poker !== undefined,
+                suffix: <Switch
+                    checked={poker?.user[profile.userUUID]?.isSpectator}
+                    onChange={() => poker && joinGame(poker, profile.userUUID, profile.sessionUUID, poker.roomID, poker.user[profile.userUUID]?.isSpectator ? 'join' : 'leave')}
+                />
             },
             {
                 prefixIcon: <ManageAccounts fontSize="small" />,
@@ -146,7 +148,7 @@ export default function UserMenu() {
                     horizontal: 'right',
                 }}
             >
-                <div className="flex items-center gap-2 p-4 w-full max-w-xs min-w-56">
+                <div className="flex items-center gap-2 p-4 w-full max-w-64">
                     <Avatar size='medium' profile={profile} />
                     <div className="overflow-hidden mr-1">
                         <div className="text-ellipsis whitespace-nowrap overflow-hidden font-bold">{ profile.displayName }</div>
@@ -156,7 +158,7 @@ export default function UserMenu() {
 
                 {menu.filter(menuItems => menuItems.filter(menuItem => !menuItem.hasMenu || menuItem.hasMenu(profile))?.length > 0).map((menuItems, index) => {
                     return (
-                        <div key={index}>
+                        <div key={index} className="w-64 max-w-64">
                             <Divider className="!my-2" />
                             {menuItems.filter(menuItem => !menuItem.hasMenu || menuItem.hasMenu(profile)).map((menuItem, itemIndex) => {
                                 return (
@@ -164,7 +166,18 @@ export default function UserMenu() {
                                         <ListItemIcon>
                                             { menuItem.prefixIcon }
                                         </ListItemIcon>
-                                        <ListItemText className="-mx-1">{ menuItem.text }</ListItemText>
+                                        <ListItemText
+                                            primaryTypographyProps={{
+                                                style: {
+                                                    whiteSpace: 'nowrap',
+                                                    textOverflow: 'ellipsis',
+                                                    overflow: 'hidden',
+                                                    marginLeft: '-.25rem',
+                                                }
+                                            }}
+                                        >
+                                            { menuItem.text }
+                                        </ListItemText>
                                         {!!menuItem.suffix && <Typography variant="body2" color="text.secondary">
                                             { menuItem.suffix }
                                         </Typography>}
@@ -177,10 +190,10 @@ export default function UserMenu() {
             </Menu>
 
             <ProfileDialog open={openDialog === 'profile'} profile={profile} onSubmit={updateProfile} onClose={() => setDialog('close')} />
-            <ChangePasswordDialog open={openDialog === 'change-password'} profile={profile} onSubmit={() => setDialog('close')} onClose={() => setDialog('close')} />
-            <SigninDialog open={openDialog === 'signin'} onClose={() => setDialog('close')} onSignup={() => setDialog('signup', true)} isTransition={isTransition} />
-            <SignupDialog open={openDialog === 'signup'} onClose={() => setDialog('close')} onSignin={() => setDialog('signin', true)} isTransition={isTransition} />
-            <SignoutDialog open={openDialog === 'signout'} onSubmit={signOut} onClose={() => setDialog('close')} />
+            {!profile.isAnonymous && <ChangePasswordDialog open={openDialog === 'change-password'} profile={profile} onSubmit={() => setDialog('close')} onClose={() => setDialog('close')} />}
+            {profile.isAnonymous && <SigninDialog open={openDialog === 'signin'} onClose={() => setDialog('close')} onSignup={() => setDialog('signup', true)} isTransition={isTransition} />}
+            {profile.isAnonymous && <SignupDialog open={openDialog === 'signup'} onClose={() => setDialog('close')} onSignin={() => setDialog('signin', true)} isTransition={isTransition} />}
+            {!profile.isAnonymous && <SignoutDialog open={openDialog === 'signout'} onSubmit={signOut} onClose={() => setDialog('close')} />}
         </>
     );
 }
