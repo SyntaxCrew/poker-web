@@ -12,9 +12,9 @@ export interface UserProfile {
 export interface User {
     userUID: string
     email?: string
-    displayName: string
-    isAnonymous: boolean
-    isLinkGoogle: boolean
+    displayName?: string
+    isAnonymous?: boolean
+    isLinkGoogle?: boolean
     imageURL?: string
     createdAt?: Timestamp
     updatedAt?: Timestamp

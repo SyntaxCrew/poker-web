@@ -2,6 +2,7 @@ import { NonIndexRouteObject, Route, Routes } from "react-router-dom";
 import HomePage from '../pages';
 import PokerRoomPage from "../pages/[room]";
 import { NotFoundPage } from "../pages/error/not-found";
+import ResetPasswordPage from "../pages/reset-password";
 
 interface RouterObject extends NonIndexRouteObject {
     title?: string
@@ -12,6 +13,11 @@ const routers: RouterObject[] = [
         title: 'Home Page',
         path: '/',
         element: <HomePage />,
+    },
+    {
+        title: 'Reset Password Page',
+        path: '/reset-password',
+        element: <ResetPasswordPage />,
     },
     {
         title: 'Poker Room Page',

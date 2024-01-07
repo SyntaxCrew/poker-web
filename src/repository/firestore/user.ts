@@ -1,5 +1,5 @@
 import { updateProfile } from "firebase/auth";
-import { Timestamp, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { Timestamp, collection, doc, getDoc, getDocs, query, setDoc, updateDoc, where } from "firebase/firestore";
 import { getCurrentUser } from "../../firebase/authentication";
 import firestore from "../../firebase/firestore";
 import { getFileURL, uploadFile } from "../../firebase/storage";
@@ -37,7 +37,7 @@ export async function getUserProfile(): Promise<UserProfile | undefined> {
             return {
                 userUUID: user.userUID,
                 email: user.email,
-                displayName: user.displayName,
+                displayName: user.displayName || '',
                 isAnonymous: false,
                 imageURL: imageURL || currentUser.photoURL || undefined,
                 sessionUUID: randomString(20),
@@ -67,4 +67,9 @@ export async function updateUserProfile(user: {userUID: string, isAnonymous: boo
     }
     const now = Timestamp.fromDate(new Date());
     await updateDoc(userDoc(user.userUID), {displayName: user.displayName, imageURL, updatedAt: now});
+}
+
+export async function isExistsEmail(email: string) {
+    const docsSnap = await getDocs(query(collection(firestore, 'user'), where('email', '==', email)));
+    return !docsSnap.empty;
 }

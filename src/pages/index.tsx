@@ -23,14 +23,14 @@ export default function HomePage() {
         setFindRoom(true);
         try {
             const isRoomExists = await isExistsPokerRoom(roomID);
-            setFindRoom(false);
             if (!isRoomExists) {
                 throw Error('Room number is not found');
             }
             navigate(`/${roomID}`);
         } catch (error) {
-            alert({message: `${error}`, severity: 'error'});
+            alert({message: `Room number is not found`, severity: 'error'});
         }
+        setFindRoom(false);
     }
 
     async function createRoom(req: CreatePokerOptionDialog) {

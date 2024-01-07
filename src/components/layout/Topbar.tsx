@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import PokerLogo from '/images/poker.png';
-import UserAvatar from '../partials/UserAvatar';
+import UserMenu from '../partials/UserMenu';
 
 export default function Topbar() {
     return (
@@ -12,7 +12,7 @@ export default function Topbar() {
                             <img src={PokerLogo} className="w-10 h-10" alt="Poker logo" />
                         </Link>
                     </div>
-                    <UserAvatar />
+                    <UserMenu />
                 </div>
             </div>
         </>

@@ -1,4 +1,4 @@
-import { getAuth, onAuthStateChanged, signInAnonymously, signInWithPopup, GoogleAuthProvider, signOut, updateProfile } from "firebase/auth";
+import { getAuth, onAuthStateChanged, signInAnonymously, signInWithPopup, GoogleAuthProvider, signOut, updateProfile, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, checkActionCode, confirmPasswordReset } from "firebase/auth";
 import app from "./firebase";
 import { AnonymousLocalStorageKey } from "../models/key";
 
@@ -10,6 +10,18 @@ onAuthStateChanged(auth, async (user) => {
         await updateProfile(userCredential.user, { displayName: 'Guest' });
     }
 });
+
+export async function createUser(email: string, password: string) {
+    await auth.authStateReady();
+    const response = await createUserWithEmailAndPassword(auth, email, password);
+    return response?.user;
+}
+
+export async function signInEmailPassword(email: string, password: string) {
+    await auth.authStateReady();
+    const response = await signInWithEmailAndPassword(auth, email, password);
+    return response?.user;
+}
 
 export async function signInGoogle() {
     await auth.authStateReady();
@@ -28,6 +40,22 @@ export async function getCurrentUser() {
     await auth.authStateReady();
     await waitForSignin();
     return auth.currentUser!;
+}
+
+export async function resetPassword(oobCode: string, newPassword: string) {
+    await auth.authStateReady();
+    await confirmPasswordReset(auth, oobCode, newPassword);
+}
+
+export async function sendResetPasswordEmail(email: string) {
+    await auth.authStateReady();
+    await sendPasswordResetEmail(auth, email);
+}
+
+export async function getEmailFromActionCode(oobCode: string) {
+    await auth.authStateReady();
+    const res = await checkActionCode(auth, oobCode)
+    return res?.data?.email
 }
 
 async function waitForSignin() {

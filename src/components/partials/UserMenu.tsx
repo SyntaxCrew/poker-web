@@ -12,7 +12,7 @@ import { UserProfile } from "../../models/user";
 import { signout } from "../../firebase/authentication";
 import { getUserProfile, updateUserProfile } from "../../repository/firestore/user";
 
-export default function UserAvatar() {
+export default function UserMenu() {
     const { setLoading, alert, setProfile, profile } = useContext(GlobalContext);
 
     const navigate = useNavigate();
@@ -20,6 +20,8 @@ export default function UserAvatar() {
 
     const [isOpenMenu, setOpenMenu] = useState(false);
     const [openDialog, setOpenDialog] = useState<'profile' | 'signin' | 'signup' | 'signout' | 'close'>('close');
+
+    const [isTransition, setTransition] = useState(true);
 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
@@ -44,7 +46,7 @@ export default function UserAvatar() {
             {
                 prefixIcon: <ManageAccounts fontSize="small" />,
                 text: 'Profile',
-                onClick: () => setOpenDialog('profile'),
+                onClick: () => setDialog('profile'),
             },
         ],
         [
@@ -52,19 +54,19 @@ export default function UserAvatar() {
                 prefixIcon: <Login fontSize="small" />,
                 text: 'Signin',
                 hasMenu: (profile: UserProfile) => profile.isAnonymous,
-                onClick: () => setOpenDialog('signin'),
+                onClick: () => setDialog('signin'),
             },
             {
                 prefixIcon: <PersonAdd fontSize="small" />,
                 text: 'Signup',
                 hasMenu: (profile: UserProfile) => profile.isAnonymous,
-                onClick: () => setOpenDialog('signup'),
+                onClick: () => setDialog('signup'),
             },
             {
                 prefixIcon: <Logout fontSize="small" />,
                 text: 'Signout',
                 hasMenu: (profile: UserProfile) => !profile.isAnonymous,
-                onClick: () => setOpenDialog('signout'),
+                onClick: () => setDialog('signout'),
             },
         ],
     ];
@@ -83,7 +85,7 @@ export default function UserAvatar() {
             alert({message: 'Update profile failed, please try again!', severity: 'error'});
         }
         setLoading(false);
-        setOpenDialog('close');
+        setDialog('close');
     }
 
     async function signOut() {
@@ -102,13 +104,18 @@ export default function UserAvatar() {
         } catch (error) {
             alert({message: 'Sign out failed', severity: 'error'});
         }
-        setOpenDialog('close');
+        setDialog('close');
         setLoading(false);
     }
 
     const toggle = (event: MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
         setOpenMenu(!isOpenMenu);
+    }
+
+    const setDialog = (dialog: 'profile' | 'signin' | 'signup' | 'signout' | 'close', isSwapComponent?: boolean) => {
+        setTransition(isSwapComponent === undefined);
+        setOpenDialog(dialog);
     }
 
     return (
@@ -160,10 +167,10 @@ export default function UserAvatar() {
                 })}
             </Menu>
 
-            <ProfileDialog open={openDialog === 'profile'} profile={profile} onSubmit={updateProfile} onClose={() => setOpenDialog('close')} />
-            <SigninDialog open={openDialog === 'signin'} onClose={() => setOpenDialog('close')} />
-            <SignupDialog open={openDialog === 'signup'} onClose={() => setOpenDialog('close')} />
-            <SignoutDialog open={openDialog === 'signout'} onSubmit={signOut} onClose={() => setOpenDialog('close')} />
+            <ProfileDialog open={openDialog === 'profile'} profile={profile} onSubmit={updateProfile} onClose={() => setDialog('close')} />
+            <SigninDialog open={openDialog === 'signin'} onClose={() => setDialog('close')} onSignup={() => setDialog('signup', true)} isTransition={isTransition} />
+            <SignupDialog open={openDialog === 'signup'} onClose={() => setDialog('close')} onSignin={() => setDialog('signin', true)} isTransition={isTransition} />
+            <SignoutDialog open={openDialog === 'signout'} onSubmit={signOut} onClose={() => setDialog('close')} />
         </>
     );
 }
