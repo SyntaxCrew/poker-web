@@ -125,7 +125,6 @@ export default function RoomMenu() {
             {
                 prefixIcon: <Restore fontSize="small" />,
                 text: 'Voting History',
-                disabled: true,
                 onClick: () => setOpenDialog('voting-history'),
             },
         ]
