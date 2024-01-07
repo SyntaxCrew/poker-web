@@ -20,19 +20,18 @@ export default function GameSettingDialog(props: {open: boolean, onSubmit?: (dat
     const [isShowCreateCustomDeck, setShowCreateCustomDeck] = useState(false);
 
     useEffect(() => {
-        if (!props.open) {
-            setTimeout(() => setShowCreateCustomDeck(false), 200)
-            return;
-        }
-        setRoomName(props.poker.roomName);
-        setEstimateOptions([...props.poker.option.estimateOption.decks]);
-        setEstimateOptionID(props.poker.option.estimateOption.activeDeckID);
-        setPokerOption(props.poker.option);
-        const gameFacilitator = Object.entries(props.poker.user).find(([ , user ]) => user.isFacilitator);
-        if (gameFacilitator) {
-            const [ userUUID ] = gameFacilitator;
-            setGameFacilitatorUUID(userUUID);
-        }
+        setTimeout(() => {
+            setShowCreateCustomDeck(false);
+            setRoomName(props.poker.roomName);
+            setEstimateOptions([...props.poker.option.estimateOption.decks]);
+            setEstimateOptionID(props.poker.option.estimateOption.activeDeckID);
+            setPokerOption(props.poker.option);
+            const gameFacilitator = Object.entries(props.poker.user).find(([ , user ]) => user.isFacilitator);
+            if (gameFacilitator) {
+                const [ userUUID ] = gameFacilitator;
+                setGameFacilitatorUUID(userUUID);
+            }
+        }, !props.open ? 200 : 0);
     }, [props.open]);
 
     function onSubmit() {

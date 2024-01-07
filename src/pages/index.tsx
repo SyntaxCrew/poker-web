@@ -54,9 +54,9 @@ export default function HomePage() {
                         <img className="m-auto" src={ScrumPokerImg} alt="Scrum Poker" />
                     </div>
                 </div>
-                <div className="w-full max-[900px]:bg-blue-400 min-[901px]:bg-blue-200 p-4">
+                <div className="w-full bg-white p-4">
                     <div className="relative top-1/2 -translate-y-1/2 overflow-y-auto">
-                        <Card className="w-96 max-w-fit m-auto rounded-md p-4 flex flex-col gap-4">
+                        <Card className="w-96 max-w-fit m-auto rounded-md p-4 flex flex-col gap-4 shadow-xl !bg-gray-50" elevation={8}>
                             <div className="text-center text-3xl font-bold">Poker</div>
                             <Divider />
                             <div className="flex gap-4">

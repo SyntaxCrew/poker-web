@@ -1,12 +1,12 @@
 import { MouseEvent, useContext, useState } from "react";
-import { Divider, IconButton, ListItemIcon, ListItemText, Menu, MenuItem, Typography } from "@mui/material";
+import { Button, Divider, IconButton, ListItemIcon, ListItemText, Menu, MenuItem, Typography } from "@mui/material";
 import { ExpandMore, GroupRemove, Restore, Settings } from "@mui/icons-material";
 import GameSettingDialog from "../dialog/GameSettingDialog";
 import VotingHistoryDialog from "../dialog/VotingHistoryDialog";
 import GlobalContext from "../../context/global";
 import { Menu as MenuModel } from "../../models/menu";
-import { UpdatePokerOptionDialog } from "../../models/poker";
-import { clearUsers, updatePokerOption } from "../../repository/firestore/poker";
+import { EstimateStatus, UpdatePokerOptionDialog } from "../../models/poker";
+import { clearUsers, updateEstimateStatus, updatePokerOption } from "../../repository/firestore/poker";
 
 export default function RoomMenu() {
     const { poker, profile, setLoading, alert } = useContext(GlobalContext);
@@ -54,6 +54,26 @@ export default function RoomMenu() {
         setLoading(false);
     }
 
+    const flipCard = async() => {
+        if (!poker) {
+            return;
+        }
+
+        let estimateStatus!: EstimateStatus;
+        switch (poker.estimateStatus) {
+            case 'CLOSED':
+                estimateStatus = 'OPENING';
+                break;
+            case 'OPENING':
+                estimateStatus = 'OPENED';
+                break;
+            case 'OPENED':
+                estimateStatus = 'CLOSED';
+                break;
+        }
+        await updateEstimateStatus(poker.roomID, estimateStatus);
+    }
+
     const menu: MenuModel[][] = [
         [
             {
@@ -80,57 +100,72 @@ export default function RoomMenu() {
     ];
     return (
         <>
-            <IconButton className="!rounded-lg hover:!bg-gray-200 !ease-in !duration-200 !transition-colors" onClick={toggle}>
-                <div className="text-black flex overflow-hidden items-center max-w-3xl px-2 gap-2">
-                    <Typography fontWeight={900} fontSize={18}>{ poker.roomName }</Typography>
-                    <ExpandMore className={"!ease-in !duration-200 !transition-transform" + (isOpenMenu ? ' rotate-180' : '')} />
-                </div>
-            </IconButton>
-
-            <Menu
-                anchorEl={anchorEl}
-                open={isOpenMenu}
-                onClose={() => setOpenMenu(false)}
-                elevation={8}
-                className="w-full"
-                anchorOrigin={{
-                    vertical: 'bottom',
-                    horizontal: 'left',
-                }}
-                transformOrigin={{
-                    vertical: 'top',
-                    horizontal: 'left',
-                }}
-            >
-                {menu.filter(menuItems => menuItems.filter(menuItem => !menuItem.hasMenu || menuItem.hasMenu(profile))?.length > 0).map((menuItems, index) => {
-                    return (
-                        <div key={index} className="w-56 max-w-full">
-                            {index > 0 && <Divider className="!my-2" />}
-                            {menuItems.filter(menuItem => !menuItem.hasMenu || menuItem.hasMenu(profile)).map((menuItem, itemIndex) => {
-                                return (
-                                    <MenuItem key={`${index}${itemIndex}`} disabled={menuItem.disabled} onClick={() => menuItem.onClick && menuItem.onClick()}>
-                                        <ListItemIcon>
-                                            { menuItem.prefixIcon }
-                                        </ListItemIcon>
-                                        <ListItemText
-                                            primaryTypographyProps={{
-                                                style: {
-                                                    whiteSpace: 'nowrap',
-                                                    textOverflow: 'ellipsis',
-                                                    overflow: 'hidden',
-                                                    marginLeft: '-.25rem',
-                                                }
-                                            }}
-                                        >
-                                            { menuItem.text }
-                                        </ListItemText>
-                                    </MenuItem>
-                                );
-                            })}
+            <div className="flex items-center justify-between w-full">
+                <div className="w-full">
+                    <IconButton className="!rounded-lg hover:!bg-gray-200 !ease-in !duration-200 !transition-colors" onClick={toggle}>
+                        <div className="text-black flex overflow-hidden items-center max-w-3xl px-2 gap-2">
+                            <Typography fontWeight={900} fontSize={18}>{ poker.roomName }</Typography>
+                            <ExpandMore className={"!ease-in !duration-200 !transition-transform" + (isOpenMenu ? ' rotate-180' : '')} />
                         </div>
-                    );
-                })}
-            </Menu>
+                    </IconButton>
+
+                    <Menu
+                        anchorEl={anchorEl}
+                        open={isOpenMenu}
+                        onClose={() => setOpenMenu(false)}
+                        elevation={8}
+                        className="w-full"
+                        anchorOrigin={{
+                            vertical: 'bottom',
+                            horizontal: 'left',
+                        }}
+                        transformOrigin={{
+                            vertical: 'top',
+                            horizontal: 'left',
+                        }}
+                    >
+                        {menu.filter(menuItems => menuItems.filter(menuItem => !menuItem.hasMenu || menuItem.hasMenu(profile))?.length > 0).map((menuItems, index) => {
+                            return (
+                                <div key={index} className="w-56 max-w-full">
+                                    {index > 0 && <Divider className="!my-2" />}
+                                    {menuItems.filter(menuItem => !menuItem.hasMenu || menuItem.hasMenu(profile)).map((menuItem, itemIndex) => {
+                                        return (
+                                            <MenuItem key={`${index}${itemIndex}`} disabled={menuItem.disabled} onClick={() => menuItem.onClick && menuItem.onClick()}>
+                                                <ListItemIcon>
+                                                    { menuItem.prefixIcon }
+                                                </ListItemIcon>
+                                                <ListItemText
+                                                    primaryTypographyProps={{
+                                                        style: {
+                                                            whiteSpace: 'nowrap',
+                                                            textOverflow: 'ellipsis',
+                                                            overflow: 'hidden',
+                                                            marginLeft: '-.25rem',
+                                                        }
+                                                    }}
+                                                >
+                                                    { menuItem.text }
+                                                </ListItemText>
+                                            </MenuItem>
+                                        );
+                                    })}
+                                </div>
+                            );
+                        })}
+                    </Menu>
+                </div>
+
+                {displayButton(poker.option.allowOthersToShowEstimates) && <Button
+                    variant="contained"
+                    color="success"
+                    className="whitespace-nowrap"
+                    onClick={flipCard}
+                    disabled={poker.estimateStatus === 'CLOSED' && !isUsersExists(true)}
+                >
+                    { poker.estimateStatus === 'OPENED' ? 'Vote Next Issue' : 'Show Cards' }
+                </Button>}
+            </div>
+
 
             <GameSettingDialog open={openDialog === 'game-setting'} onSubmit={updateGameSetting} onClose={() => setOpenDialog('close')} profile={profile} poker={poker} />
             <VotingHistoryDialog open={openDialog === 'voting-history'} onClose={() => setOpenDialog('close')} poker={poker} />

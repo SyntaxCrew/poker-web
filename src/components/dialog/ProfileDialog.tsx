@@ -7,7 +7,7 @@ import { maximumDisplayNameLength } from "../../constant/maximum-length";
 import { UserProfile } from "../../models/user"
 import { notMultiSpace, notStartWithSpace, pressEnter, setValue } from "../../utils/input";
 
-export default function ProfileDialog(props: {open: boolean, profile: UserProfile, onSubmit?: (displayName: string, profileImage?: File) => void, onClose?: () => void}) {
+export default function ProfileDialog(props: {open: boolean, profile: UserProfile, onSubmit?: (displayName: string, profileImage?: File) => Promise<void>, onClose?: () => void}) {
     const [displayName, setDisplayName] = useState('');
     const [profileImageURL, setProfileImageURL] = useState<string>();
     const [inputFile, setInputFile] = useState<File>();
@@ -28,16 +28,12 @@ export default function ProfileDialog(props: {open: boolean, profile: UserProfil
         }
     }
 
-    const onSubmit = () => {
+    const onSubmit = async () => {
         if (displayName.trim().length === 0) {
             return;
         }
-        setTimeout(() => {
-            setDisplayName(props.profile.displayName.trim());
-            setProfileImageURL(props.profile.imageURL);
-        }, 200)
         if (props.onSubmit) {
-            props.onSubmit(displayName.trim(), inputFile);
+            await props.onSubmit(displayName.trim(), inputFile);
         }
     }
 

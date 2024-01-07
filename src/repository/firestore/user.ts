@@ -59,15 +59,26 @@ export async function signin(user: User) {
 }
 
 export async function updateUserProfile(user: {userUID: string, isAnonymous: boolean, displayName: string, file?: File}) {
+    const now = Timestamp.fromDate(new Date());
     let imageURL: string | undefined = undefined;
     if (user.file) {
         imageURL = await uploadFile('profile/'+user.userUID, user.file);
     }
+
+    const docsSnap = await getDocs(query(collection(firestore, 'poker'), where(`user.${user.userUID}`, '!=', null)));
+    docsSnap.forEach(async (result) => {
+        if (result.exists()) {
+            await updateDoc(doc(firestore, 'poker', result.id), {
+                [`user.${user.userUID}.displayName`]: user.displayName,
+                updatedAt: now,
+            })
+        }
+    })
+
     if (user.isAnonymous) {
         await updateProfile(await getCurrentUser(), { displayName: user.displayName, photoURL: imageURL });
         return;
     }
-    const now = Timestamp.fromDate(new Date());
     await updateDoc(userDoc(user.userUID), {displayName: user.displayName, imageURL, updatedAt: now});
 }
 

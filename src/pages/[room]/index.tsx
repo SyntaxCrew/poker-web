@@ -1,12 +1,10 @@
 import { useContext, useEffect, useState } from "react";
-import { Link, useBeforeUnload, useNavigate, useParams } from "react-router-dom";
-import PokerLogo from '/images/poker.png';
+import { useBeforeUnload, useNavigate, useParams } from "react-router-dom";
 import GlobalContext from "../../context/global";
+import JoinGameDialog from "../../components/dialog/JoinGameDialog";
 import UserCard from "../../components/partials/UserCard";
 import EstimatePointCard from "../../components/shared/EstimatePointCard";
-import { EstimateStatus } from "../../models/poker";
-import { clearUsers, joinGame, joinPokerRoom, leavePokerRoom, updateEstimateStatus, pokeCard, checkPokerRoom } from '../../repository/firestore/poker';
-import JoinGameDialog from "../../components/dialog/JoinGameDialog";
+import { joinPokerRoom, leavePokerRoom, updateEstimateStatus, pokeCard, checkPokerRoom } from '../../repository/firestore/poker';
 
 // Object keys sequence
 // 1. Wait for fetched profile from App.tsx and inject into global context
@@ -86,6 +84,7 @@ export default function PokerRoomPage() {
     }
 
     async function joinPoker() {
+        let isFirstTime = true;
         try {
             await joinPokerRoom({
                 userUUID: profile.userUUID,
@@ -136,50 +135,22 @@ export default function PokerRoomPage() {
                     } catch (error) {
                         navigate('/');
                     } finally {
-                        setLoading(false);
+                        if (isFirstTime) {
+                            setLoading(false);
+                            isFirstTime = false;
+                        }
                     }
                 },
             });
 
         } catch (error) {
-            setLoading(false);
+            if (isFirstTime) {
+                setLoading(false);
+                isFirstTime = false;
+            }
             navigate('/');
         }
     }
-
-    const isUsersExists = (isPoked?: boolean) => {
-        if (!poker) {
-            return false;
-        }
-        for (const userUUID of Object.keys(poker.user)) {
-            if (!poker.user[userUUID].isSpectator && poker.user[userUUID].activeSessions?.length > 0 && (!isPoked || poker.user[userUUID].estimatePoint != null)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    const flipCard = async() => {
-        if (!poker) {
-            return;
-        }
-
-        let estimateStatus!: EstimateStatus;
-        switch (poker.estimateStatus) {
-            case 'CLOSED':
-                estimateStatus = 'OPENING';
-                break;
-            case 'OPENING':
-                estimateStatus = 'OPENED';
-                break;
-            case 'OPENED':
-                estimateStatus = 'CLOSED';
-                break;
-        }
-        await updateEstimateStatus(room!, estimateStatus);
-    }
-
-    const displayButton = (isAllowOption: boolean) => isUsersExists() && poker && (poker.user[profile.userUUID]?.isFacilitator || (isAllowOption && !poker.user[profile.userUUID]?.isSpectator && poker.user[profile.userUUID]?.activeSessions?.length > 0))
 
     return (
         <>
@@ -193,52 +164,14 @@ export default function PokerRoomPage() {
                 }}
             />
 
-            <div className="flex items-center justify-between px-2 sm:px-4 h-20 bg-blue-200">
-                <div className="flex items-center gap-2">
-                    <Link to="/">
-                        <img src={PokerLogo} className="w-10 h-10" alt="Poker logo" />
-                    </Link>
-                    <span className="text-black">{ room }</span>
-                </div>
-                { !isLoading && poker &&
-                    <div className="flex items-center gap-2">
-                        <span className="text-black">{ countdown > 0 ? countdown : '' }</span>
-
-                        <button
-                            className="rounded-md px-2 bg-blue-500 text-white py-1 ease-in duration-200 hover:bg-blue-600"
-                            disabled={poker.estimateStatus !== 'CLOSED'}
-                            onClick={() => joinGame(poker, profile.userUUID, profile.sessionUUID, room!, poker.user[profile.userUUID]?.isSpectator ? 'join' : 'leave')}
-                        >
-                            { poker.user[profile.userUUID]?.isSpectator ? 'Join' : 'Leave' }
-                        </button>
-
-                        {displayButton(poker.option.allowOthersToDeleteEstimates) && <button
-                            className="rounded-md px-2 bg-red-500 text-white py-1 ease-in duration-200 hover:bg-red-600"
-                            disabled={poker.estimateStatus === 'OPENING'}
-                            onClick={() => isUsersExists() && clearUsers(room!)}
-                        >
-                            Clear Users
-                        </button>}
-
-                        {displayButton(poker.option.allowOthersToShowEstimates) && <button
-                            className="rounded-md px-2 bg-green-500 text-black py-1 ease-in duration-200 hover:bg-green-600"
-                            onClick={flipCard}
-                            disabled={poker.estimateStatus === 'CLOSED' && !isUsersExists(true)}
-                        >
-                            { poker.estimateStatus === 'OPENED' ? 'Vote Next Issue' : 'Show Cards' }
-                        </button>}
-                    </div>
-                }
-            </div>
-
-            <div className="p-2 sm:p-4">
+            <div className="p-2 sm:p-4 top-16 relative h-[calc(100vh-4rem)] bg-white">
                 {!isLoading && poker && (
                     <div className="flex gap-2 flex-wrap w-fit h-full justify-center items-center m-auto">
                         {
                             Object.
                                 keys(poker.user).
-                                sort((a, b) => poker.user[a].displayName.localeCompare(poker.user[b].displayName)).
-                                filter(userUUID => !poker.user[userUUID].isSpectator && ((poker.user[userUUID].estimatePoint != null && poker.estimateStatus !== 'CLOSED') || poker.user[userUUID].activeSessions?.length)).
+                                sort((a, b) => poker.user[a].displayName?.localeCompare(poker.user[b].displayName || '')).
+                                filter(userUUID => poker.user[userUUID].displayName && !poker.user[userUUID].isSpectator && ((poker.user[userUUID].estimatePoint != null && poker.estimateStatus !== 'CLOSED') || poker.user[userUUID].activeSessions?.length)).
                                 map(userUUID => {
                                     return (
                                         <UserCard
@@ -257,7 +190,7 @@ export default function PokerRoomPage() {
                 )}
             </div>
 
-            <div className="absolute z-10 bottom-0 w-full p-2 sm:p-4 bg-yellow-200">
+            <div className="absolute z-10 bottom-0 w-full p-2 sm:p-4 bg-white">
                 {poker && poker?.estimateStatus !== 'OPENED' && poker.user[profile.userUUID]?.activeSessions?.length > 0 && !poker.user[profile.userUUID]?.isSpectator &&
                     <div className="flex flex-wrap justify-center items-center gap-3">
                         {poker?.option.estimateOption.decks.find(deck => deck.deckID === poker.option.estimateOption.activeDeckID)?.deckValues.map(estimatePoint => {
