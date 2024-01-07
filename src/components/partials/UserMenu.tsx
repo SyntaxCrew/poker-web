@@ -1,9 +1,10 @@
 import { MouseEvent, useContext, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Divider, ListItemIcon, ListItemText, Menu, MenuItem, Typography } from "@mui/material";
-import { CollectionsBookmark, Logout, Login, PersonAdd, ManageAccounts } from '@mui/icons-material';
+import { CollectionsBookmark, Logout, Login, PersonAdd, ManageAccounts, Lock } from '@mui/icons-material';
 import Avatar from "./Avatar";
 import ProfileDialog from "../dialog/ProfileDialog";
+import ChangePasswordDialog from "../dialog/ChangePasswordDialog";
 import SigninDialog from "../dialog/SigninDialog";
 import SignupDialog from "../dialog/SignupDialog";
 import SignoutDialog from "../dialog/SignoutDialog";
@@ -18,8 +19,10 @@ export default function UserMenu() {
     const navigate = useNavigate();
     const location = useLocation();
 
+    type DialogName = 'profile' | 'change-password' | 'signin' | 'signup' | 'signout' | 'close'
+
     const [isOpenMenu, setOpenMenu] = useState(false);
-    const [openDialog, setOpenDialog] = useState<'profile' | 'signin' | 'signup' | 'signout' | 'close'>('close');
+    const [openDialog, setOpenDialog] = useState<DialogName>('close');
 
     const [isTransition, setTransition] = useState(true);
 
@@ -47,6 +50,12 @@ export default function UserMenu() {
                 prefixIcon: <ManageAccounts fontSize="small" />,
                 text: 'Profile',
                 onClick: () => setDialog('profile'),
+            },
+            {
+                prefixIcon: <Lock fontSize="small" />,
+                text: 'Change Password',
+                hasMenu: (profile: UserProfile) => !profile.isAnonymous,
+                onClick: () => setDialog('change-password'),
             },
         ],
         [
@@ -113,7 +122,7 @@ export default function UserMenu() {
         setOpenMenu(!isOpenMenu);
     }
 
-    const setDialog = (dialog: 'profile' | 'signin' | 'signup' | 'signout' | 'close', isSwapComponent?: boolean) => {
+    const setDialog = (dialog: DialogName, isSwapComponent?: boolean) => {
         setTransition(isSwapComponent === undefined);
         setOpenDialog(dialog);
     }
@@ -168,6 +177,7 @@ export default function UserMenu() {
             </Menu>
 
             <ProfileDialog open={openDialog === 'profile'} profile={profile} onSubmit={updateProfile} onClose={() => setDialog('close')} />
+            <ChangePasswordDialog open={openDialog === 'change-password'} profile={profile} onSubmit={() => setDialog('close')} onClose={() => setDialog('close')} />
             <SigninDialog open={openDialog === 'signin'} onClose={() => setDialog('close')} onSignup={() => setDialog('signup', true)} isTransition={isTransition} />
             <SignupDialog open={openDialog === 'signup'} onClose={() => setDialog('close')} onSignin={() => setDialog('signin', true)} isTransition={isTransition} />
             <SignoutDialog open={openDialog === 'signout'} onSubmit={signOut} onClose={() => setDialog('close')} />

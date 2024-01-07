@@ -1,6 +1,6 @@
 import { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, TextField, Card, Box, CircularProgress } from '@mui/material';
+import { Button, TextField, Card, Box, CircularProgress, Divider } from '@mui/material';
 import ScrumPokerImg from '/images/estimation.png';
 import GlobalContext from '../context/global';
 import CreatePokerOption from '../components/dialog/CreatePokerOptionDialog';
@@ -49,7 +49,7 @@ export default function HomePage() {
     return (
         <>
             <div className="w-screen h-screen flex overflow-y-auto">
-                <div className="w-full bg-white px-6 max-[900px]:hidden" id="{page}-logo">
+                <div className="w-full bg-white px-6 max-[900px]:hidden" id="home-page-logo">
                     <div className="relative top-1/2 -translate-y-1/2 overflow-y-auto">
                         <img className="m-auto" src={ScrumPokerImg} alt="Scrum Poker" />
                     </div>
@@ -57,7 +57,8 @@ export default function HomePage() {
                 <div className="w-full max-[900px]:bg-blue-400 min-[901px]:bg-blue-200 p-4">
                     <div className="relative top-1/2 -translate-y-1/2 overflow-y-auto">
                         <Card className="w-96 max-w-fit m-auto rounded-md p-4 flex flex-col gap-4">
-                            <div className="text-center text-3xl">Poker</div>
+                            <div className="text-center text-3xl font-bold">Poker</div>
+                            <Divider />
                             <div className="flex gap-4">
                                 <TextField
                                     size='medium'

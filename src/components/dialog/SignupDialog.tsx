@@ -6,7 +6,7 @@ import GoogleIcon from '/images/google-icon.png';
 import GlobalContext from "../../context/global";
 import { createUser, signInGoogle } from "../../firebase/authentication";
 import { getUserProfile, signin } from "../../repository/firestore/user";
-import { pressEnter, setValue } from "../../utils/input";
+import { noSpace, pressEnter, setValue } from "../../utils/input";
 
 export default function SignupDialog(props: {open: boolean, onSubmit?: () => void, onClose?: () => void, onSignin: () => void, isTransition: boolean}) {
     const { isLoading, setLoading, setProfile, alert } = useContext(GlobalContext);
@@ -22,7 +22,7 @@ export default function SignupDialog(props: {open: boolean, onSubmit?: () => voi
             placeholder: 'Enter your email',
             label: 'Email',
             value: email,
-            onChange: setValue(setEmail),
+            onChange: setValue(setEmail, { maximum: 100, others: [noSpace] }),
         },
         {
             type: (isShowPassword: boolean) => isShowPassword ? 'text' : 'password',
@@ -63,7 +63,7 @@ export default function SignupDialog(props: {open: boolean, onSubmit?: () => voi
             await signin({
                 userUID: user.uid,
                 email: user.email || undefined,
-                displayName: user.displayName || 'Username',
+                displayName: user.displayName || user.email?.substring(0, user.email?.indexOf('@')) || 'Username',
                 isAnonymous: false,
                 isLinkGoogle: false,
             })
@@ -89,7 +89,7 @@ export default function SignupDialog(props: {open: boolean, onSubmit?: () => voi
                 await signin({
                     userUID: user.uid,
                     email: user.email || undefined,
-                    displayName: user.displayName || '',
+                    displayName: user.displayName || undefined,
                     isAnonymous: false,
                     isLinkGoogle: true,
                 });
@@ -139,7 +139,7 @@ export default function SignupDialog(props: {open: boolean, onSubmit?: () => voi
                             value={input.value}
                             disabled={isLoading}
                             onChange={input.onChange}
-                            onKeyDown={pressEnter(signUpWithEmailPassword, props.onClose)}
+                            onKeyDown={pressEnter(signUpWithEmailPassword, onClose)}
                             InputProps={input.isShowPassword === undefined ? {} : {
                                 endAdornment: <InputAdornment position="end">
                                     <IconButton

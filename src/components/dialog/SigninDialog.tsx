@@ -6,7 +6,7 @@ import GoogleIcon from '/images/google-icon.png';
 import GlobalContext from "../../context/global";
 import { sendResetPasswordEmail, signInEmailPassword, signInGoogle } from "../../firebase/authentication";
 import { getUserProfile, signin } from "../../repository/firestore/user";
-import { pressEnter, setValue } from "../../utils/input";
+import { noSpace, pressEnter, setValue } from "../../utils/input";
 
 export default function SigninDialog(props: {open: boolean, onSubmit?: () => void, onClose?: () => void, onSignup: () => void, isTransition: boolean}) {
     const { isLoading, setLoading, setProfile, alert } = useContext(GlobalContext);
@@ -23,7 +23,7 @@ export default function SigninDialog(props: {open: boolean, onSubmit?: () => voi
             placeholder: 'Enter your email',
             label: 'Email',
             value: email,
-            onChange: setValue(setEmail),
+            onChange: setValue(setEmail, { others: [noSpace] }),
         },
         {
             type: (isShowPassword: boolean) => isShowPassword ? 'text' : 'password',
@@ -63,7 +63,7 @@ export default function SigninDialog(props: {open: boolean, onSubmit?: () => voi
             const user = await signInEmailPassword(email, password);
             await signin({
                 userUID: user.uid,
-                displayName: user.displayName || '',
+                displayName: user.displayName || undefined,
             })
             await signIn();
             alert({message: 'Sign in successfully', severity: 'success'});
@@ -81,7 +81,7 @@ export default function SigninDialog(props: {open: boolean, onSubmit?: () => voi
                 await signin({
                     userUID: user.uid,
                     email: user.email || undefined,
-                    displayName: user.displayName || '',
+                    displayName: user.displayName || undefined,
                     isAnonymous: false,
                     isLinkGoogle: true,
                 });
@@ -148,7 +148,7 @@ export default function SigninDialog(props: {open: boolean, onSubmit?: () => voi
                         label='Email'
                         value={email}
                         onChange={setValue(setEmail)}
-                        onKeyDown={pressEnter(forgotPassword, props.onClose)}
+                        onKeyDown={pressEnter(forgotPassword, onClose)}
                     />
                     <Button
                         variant="contained"
@@ -176,7 +176,7 @@ export default function SigninDialog(props: {open: boolean, onSubmit?: () => voi
                                 value={input.value}
                                 disabled={isLoading}
                                 onChange={input.onChange}
-                                onKeyDown={pressEnter(signInWithEmailPassword, props.onClose)}
+                                onKeyDown={pressEnter(signInWithEmailPassword, onClose)}
                                 InputProps={input.isShowPassword === undefined ? {} : {
                                     endAdornment: <InputAdornment position="end">
                                         <IconButton

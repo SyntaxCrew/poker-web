@@ -49,9 +49,11 @@ export async function getUserProfile(): Promise<UserProfile | undefined> {
 export async function signin(user: User) {
     const now = Timestamp.fromDate(new Date());
     user.lastLoginAt = now;
-    try {
+    const docSnap = await getDoc(userDoc(user.userUID));
+    if (docSnap.exists()) {
+        user.displayName = undefined;
         await updateDoc(userDoc(user.userUID), {...user, updatedAt: now});
-    } catch (error) {
+    } else {
         await setDoc(userDoc(user.userUID), {...user, createdAt: now});
     }
 }
