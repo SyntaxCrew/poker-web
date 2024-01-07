@@ -1,4 +1,4 @@
-import { MouseEvent, useContext, useState } from "react";
+import { MouseEvent, useContext, useEffect, useState } from "react";
 import { Button, Divider, IconButton, ListItemIcon, ListItemText, Menu, MenuItem, Typography } from "@mui/material";
 import { ExpandMore, GroupRemove, Restore, Settings } from "@mui/icons-material";
 import GameSettingDialog from "../dialog/GameSettingDialog";
@@ -16,6 +16,38 @@ export default function RoomMenu() {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [isOpenMenu, setOpenMenu] = useState(false);
     const [openDialog, setOpenDialog] = useState<Dialog>('close');
+
+    const [countdown, setCountdown] = useState(0);
+    const [isCountingDown, setCountingDown] = useState(false);
+
+    useEffect(() => {
+        if (poker?.estimateStatus === 'OPENING' && !isCountingDown) {
+            setCountdown(2);
+            setCountingDown(true);
+        } else if (poker?.estimateStatus === 'OPENED' && isCountingDown) {
+            setCountdown(0);
+            setCountingDown(false);
+        }
+    }, [isCountingDown, poker])
+
+    // Countdown for reveal cards
+    useEffect(() => {
+        const timer = countdown > 0 && setInterval(() => {
+            setCountdown(countdown - 1);
+        }, 1000);
+        if (typeof timer == "number") {
+            return () => clearInterval(timer);
+        }
+        if (poker && poker.estimateStatus !== 'OPENED') {
+            for (const userUUID of Object.keys(poker.user)) {
+                // update multiple times depend on active users
+                if (!poker.user[userUUID].isSpectator && poker.user[userUUID].estimatePoint != null) {
+                    updateEstimateStatus(poker.roomID, 'OPENED');
+                    break;
+                }
+            }
+        }
+    }, [countdown]);
 
     if (!poker) {
         return (<></>);
@@ -101,7 +133,7 @@ export default function RoomMenu() {
     return (
         <>
             <div className="flex items-center justify-between w-full">
-                <div className="w-full">
+                <div className="w-full max-w-full">
                     <IconButton className="!rounded-lg hover:!bg-gray-200 !ease-in !duration-200 !transition-colors" onClick={toggle}>
                         <div className="text-black flex overflow-hidden items-center max-w-3xl px-2 gap-2">
                             <Typography fontWeight={900} fontSize={18}>{ poker.roomName }</Typography>
@@ -155,15 +187,18 @@ export default function RoomMenu() {
                     </Menu>
                 </div>
 
-                {displayButton(poker.option.allowOthersToShowEstimates) && <Button
-                    variant="contained"
-                    color="success"
-                    className="whitespace-nowrap"
-                    onClick={flipCard}
-                    disabled={poker.estimateStatus === 'CLOSED' && !isUsersExists(true)}
-                >
-                    { poker.estimateStatus === 'OPENED' ? 'Vote Next Issue' : 'Show Cards' }
-                </Button>}
+                <div className="flex items-center gap-4">
+                    {countdown > 0 && <span className="text-black text-lg">{ countdown }</span>}
+                    {displayButton(poker.option.allowOthersToShowEstimates) && <Button
+                        variant="contained"
+                        color="success"
+                        className="whitespace-nowrap"
+                        onClick={flipCard}
+                        disabled={poker.estimateStatus === 'CLOSED' && !isUsersExists(true)}
+                    >
+                        { poker.estimateStatus === 'OPENED' ? 'Vote Next Issue' : 'Show Cards' }
+                    </Button>}
+                </div>
             </div>
 
 

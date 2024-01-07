@@ -19,8 +19,6 @@ export default function PokerRoomPage() {
     const navigate = useNavigate();
 
     const [currentEstimatePoint, setCurrentEstimatePoint] = useState<string>();
-    const [countdown, setCountdown] = useState(0);
-    const [isCountingDown, setCountingDown] = useState(false);
 
     // set display name in dialog if user join to the game at first time
     const [isReady, setReady] = useState(false);
@@ -39,35 +37,6 @@ export default function PokerRoomPage() {
             }
         }
     }, [isPageReady, isReady])
-
-    useEffect(() => {
-        if (poker?.estimateStatus === 'OPENING' && !isCountingDown) {
-            setCountdown(2);
-            setCountingDown(true);
-        } else if (poker?.estimateStatus === 'OPENED' && isCountingDown) {
-            setCountdown(0);
-            setCountingDown(false);
-        }
-    }, [isCountingDown, poker])
-
-    // Countdown for reveal cards
-    useEffect(() => {
-        const timer = countdown > 0 && setInterval(() => {
-            setCountdown(countdown - 1);
-        }, 1000);
-        if (typeof timer == "number") {
-            return () => clearInterval(timer);
-        }
-        if (poker && poker.estimateStatus !== 'OPENED') {
-            for (const userUUID of Object.keys(poker.user)) {
-                // update multiple times depend on active users
-                if (!poker.user[userUUID].isSpectator && poker.user[userUUID].estimatePoint != null) {
-                    updateEstimateStatus(room!, 'OPENED');
-                    break;
-                }
-            }
-        }
-    }, [countdown]);
 
     async function checkExistsRoom() {
         const { isExists, isJoined } = await checkPokerRoom(room!, profile.userUUID);
