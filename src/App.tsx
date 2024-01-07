@@ -27,12 +27,14 @@ function App() {
   const [alert, setAlert] = useState<AlertModel>({isShow: false, message: '', severity: 'info'});
   const [profile, setProfile] = useState<UserProfile>({isAnonymous: true, userUUID: '', sessionUUID: '', displayName: ''});
   const [poker, setPoker] = useState<Poker>();
+  const [isPageReady, setPageReady] = useState(false);
 
   useMemo(async () => {
     const user = await getUserProfile();
     if (user) {
       setProfile(user);
     }
+    setPageReady(true);
   }, []);
 
   // Clear poker data for re-render topbar
@@ -46,7 +48,7 @@ function App() {
   return (
     <>
       <ThemeProvider theme={theme}>
-        <GlobalContext.Provider value={{profile, setProfile, alert: (alert => setAlert({...alert, isShow: true})), isLoading, setLoading, poker, setPoker}}>
+        <GlobalContext.Provider value={{profile, setProfile, alert: (alert => setAlert({...alert, isShow: true})), isLoading, setLoading, poker, setPoker, isPageReady}}>
           <Alert isShowAlert={alert.isShow} message={alert.message} severity={alert.severity} onDismiss={() => setAlert({...alert, isShow: false})} />
           <LoadingScreen isLoading={isLoading} />
           <Topbar />

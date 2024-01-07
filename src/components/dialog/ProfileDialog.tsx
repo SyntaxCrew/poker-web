@@ -1,5 +1,5 @@
 import { ChangeEvent, useEffect, useRef, useState } from "react"
-import { Button, Dialog, DialogActions, DialogContent, Divider, TextField } from "@mui/material"
+import { Button, Dialog, DialogActions, DialogContent, Divider, InputAdornment, TextField } from "@mui/material"
 import { Edit } from "@mui/icons-material";
 import HeaderDialog from "./HeaderDialog";
 import Avatar from "../partials/Avatar";
@@ -65,6 +65,9 @@ export default function ProfileDialog(props: {open: boolean, profile: UserProfil
                         value={displayName}
                         onChange={setValue(setDisplayName, { maximum: 100, others: [notStartWithSpace, notMultiSpace] })}
                         onKeyDown={pressEnter(onSubmit, onClose)}
+                        InputProps={{
+                            endAdornment: <InputAdornment position="end">{ displayName.length }/100</InputAdornment>,
+                        }}
                     />
 
                     {props.profile.email && <TextField

@@ -14,6 +14,14 @@ export async function isExistsPokerRoom(roomID: string) {
     return docSnap.exists();
 }
 
+export async function checkPokerRoom(roomID: string, userUUID: string) {
+    const docSnap = await getDoc(pokerDoc(roomID));
+    return {
+        isExists: docSnap.exists(),
+        isJoined: docSnap.data()?.user[userUUID] !== undefined || false,
+    }
+}
+
 export async function joinPokerRoom(req: {
     userUUID: string,
     sessionUUID: string,

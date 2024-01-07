@@ -10,6 +10,7 @@ const GlobalContext = createContext<{
     setLoading: Dispatch<SetStateAction<boolean>>,
     poker?: Poker,
     setPoker: Dispatch<SetStateAction<Poker | undefined>>,
+    isPageReady: boolean,
 }>({
     profile: {isAnonymous: true, userUUID: '', sessionUUID: '', displayName: 'Guest'},
     setProfile: () => {},
@@ -17,6 +18,7 @@ const GlobalContext = createContext<{
     isLoading: false,
     setLoading: () => {},
     setPoker: () => {},
+    isPageReady: false,
 });
 
 export default GlobalContext

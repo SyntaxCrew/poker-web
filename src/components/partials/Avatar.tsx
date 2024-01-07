@@ -17,7 +17,7 @@ export default function Avatar(props: {profile: UserProfile, onClick?: (event: M
                     ? <ImageLoading sizeClass={sizeClass} url={props.profile.imageURL} size={props.size} className="rounded-full" />
                     : <div className="rounded-full bg-blue-300 hover:brightness-90 ease-in duration-200 transition-[--tw-brightness]">
                         <div className={`flex items-center justify-center font-bold text-white ` + sizeClass}>
-                            <span className={props.size && props.size === 'large' ? 'text-5xl' : ''}>{ props.profile.displayName ? props.profile.displayName.charAt(0) : 'G' }</span>
+                            <span className={props.size && props.size === 'large' ? 'text-5xl' : ''}>{ props.profile.displayName ? props.profile.displayName.charAt(0).toUpperCase() : 'G' }</span>
                         </div>
                     </div>
                 }
