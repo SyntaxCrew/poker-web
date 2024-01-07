@@ -133,7 +133,7 @@ export default function PokerRoomPage() {
                 }}
             />
 
-            <div className="p-2 sm:p-4 top-16 relative h-[calc(100vh-4rem)] bg-white">
+            <div className="p-2 sm:p-4 top-16 relative h-[calc(100vh-4rem-7rem)] bg-white">
                 {!isLoading && poker && (
                     <div className="flex gap-2 flex-wrap w-fit h-full justify-center items-center m-auto">
                         {
@@ -159,9 +159,9 @@ export default function PokerRoomPage() {
                 )}
             </div>
 
-            <div className="absolute z-10 bottom-0 w-full p-2 sm:p-4 bg-white">
+            <div className="absolute z-10 bottom-0 bg-white w-full overflow-x-auto">
                 {poker && poker?.estimateStatus !== 'OPENED' && poker.user[profile.userUUID]?.activeSessions?.length > 0 && !poker.user[profile.userUUID]?.isSpectator &&
-                    <div className="flex flex-wrap justify-center items-center gap-3">
+                    <div className="w-fit flex justify-center items-center gap-3 p-2 sm:p-4 m-auto">
                         {poker?.option.estimateOption.decks.find(deck => deck.deckID === poker.option.estimateOption.activeDeckID)?.deckValues.map(estimatePoint => {
                             return (
                                 <EstimatePointCard

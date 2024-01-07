@@ -1,5 +1,5 @@
 import { MouseEvent, useContext, useEffect, useState } from "react";
-import { Button, Divider, IconButton, ListItemIcon, ListItemText, Menu, MenuItem, Typography } from "@mui/material";
+import { Button, Divider, ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
 import { ExpandMore, GroupRemove, Restore, Settings } from "@mui/icons-material";
 import GameSettingDialog from "../dialog/GameSettingDialog";
 import VotingHistoryDialog from "../dialog/VotingHistoryDialog";
@@ -66,7 +66,7 @@ export default function RoomMenu() {
     }
     const displayButton = (isAllowOption: boolean) => isUsersExists() && poker && (poker.user[profile.userUUID]?.isFacilitator || (isAllowOption && !poker.user[profile.userUUID]?.isSpectator && poker.user[profile.userUUID]?.activeSessions?.length > 0))
 
-    const toggle = (event: MouseEvent<HTMLButtonElement>) => {
+    const toggle = (event: MouseEvent<HTMLDivElement>) => {
         setAnchorEl(event.currentTarget);
         setOpenMenu(!isOpenMenu);
     }
@@ -132,73 +132,67 @@ export default function RoomMenu() {
     ];
     return (
         <>
-            <div className="flex items-center justify-between w-full">
-                <div className="w-full max-w-full">
-                    <IconButton className="!rounded-lg hover:!bg-gray-200 !ease-in !duration-200 !transition-colors" onClick={toggle}>
-                        <div className="text-black flex overflow-hidden items-center max-w-3xl px-2 gap-2">
-                            <Typography fontWeight={900} fontSize={18}>{ poker.roomName }</Typography>
-                            <ExpandMore className={"!ease-in !duration-200 !transition-transform" + (isOpenMenu ? ' rotate-180' : '')} />
+            <div className="w-fit flex overflow-hidden items-center max-w-3xl px-2 py-1 gap-1 rounded-lg text-black hover:bg-gray-200 ease-in duration-200 transition-colors cursor-pointer" onClick={toggle}>
+                <div className="overflow-hidden text-ellipsis whitespace-nowrap font-bold">{ poker.roomName }</div>
+                <ExpandMore className={"!ease-in !duration-200 !transition-transform -mr-1.5" + (isOpenMenu ? ' rotate-180' : '')} />
+            </div>
+
+            <Menu
+                anchorEl={anchorEl}
+                open={isOpenMenu}
+                onClose={() => setOpenMenu(false)}
+                elevation={8}
+                className="w-full"
+                anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'left',
+                }}
+                transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'left',
+                }}
+            >
+                {menu.filter(menuItems => menuItems.filter(menuItem => !menuItem.hasMenu || menuItem.hasMenu(profile))?.length > 0).map((menuItems, index) => {
+                    return (
+                        <div key={index} className="w-56 max-w-full">
+                            {index > 0 && <Divider className="!my-2" />}
+                            {menuItems.filter(menuItem => !menuItem.hasMenu || menuItem.hasMenu(profile)).map((menuItem, itemIndex) => {
+                                return (
+                                    <MenuItem key={`${index}${itemIndex}`} disabled={menuItem.disabled} onClick={() => menuItem.onClick && menuItem.onClick()}>
+                                        <ListItemIcon>
+                                            { menuItem.prefixIcon }
+                                        </ListItemIcon>
+                                        <ListItemText
+                                            primaryTypographyProps={{
+                                                style: {
+                                                    whiteSpace: 'nowrap',
+                                                    textOverflow: 'ellipsis',
+                                                    overflow: 'hidden',
+                                                    marginLeft: '-.25rem',
+                                                }
+                                            }}
+                                        >
+                                            { menuItem.text }
+                                        </ListItemText>
+                                    </MenuItem>
+                                );
+                            })}
                         </div>
-                    </IconButton>
+                    );
+                })}
+            </Menu>
 
-                    <Menu
-                        anchorEl={anchorEl}
-                        open={isOpenMenu}
-                        onClose={() => setOpenMenu(false)}
-                        elevation={8}
-                        className="w-full"
-                        anchorOrigin={{
-                            vertical: 'bottom',
-                            horizontal: 'left',
-                        }}
-                        transformOrigin={{
-                            vertical: 'top',
-                            horizontal: 'left',
-                        }}
-                    >
-                        {menu.filter(menuItems => menuItems.filter(menuItem => !menuItem.hasMenu || menuItem.hasMenu(profile))?.length > 0).map((menuItems, index) => {
-                            return (
-                                <div key={index} className="w-56 max-w-full">
-                                    {index > 0 && <Divider className="!my-2" />}
-                                    {menuItems.filter(menuItem => !menuItem.hasMenu || menuItem.hasMenu(profile)).map((menuItem, itemIndex) => {
-                                        return (
-                                            <MenuItem key={`${index}${itemIndex}`} disabled={menuItem.disabled} onClick={() => menuItem.onClick && menuItem.onClick()}>
-                                                <ListItemIcon>
-                                                    { menuItem.prefixIcon }
-                                                </ListItemIcon>
-                                                <ListItemText
-                                                    primaryTypographyProps={{
-                                                        style: {
-                                                            whiteSpace: 'nowrap',
-                                                            textOverflow: 'ellipsis',
-                                                            overflow: 'hidden',
-                                                            marginLeft: '-.25rem',
-                                                        }
-                                                    }}
-                                                >
-                                                    { menuItem.text }
-                                                </ListItemText>
-                                            </MenuItem>
-                                        );
-                                    })}
-                                </div>
-                            );
-                        })}
-                    </Menu>
-                </div>
-
-                <div className="flex items-center gap-4">
-                    {countdown > 0 && <span className="text-black text-lg">{ countdown }</span>}
-                    {displayButton(poker.option.allowOthersToShowEstimates) && <Button
-                        variant="contained"
-                        color="success"
-                        className="whitespace-nowrap"
-                        onClick={flipCard}
-                        disabled={poker.estimateStatus === 'CLOSED' && !isUsersExists(true)}
-                    >
-                        { poker.estimateStatus === 'OPENED' ? 'Vote Next Issue' : 'Show Cards' }
-                    </Button>}
-                </div>
+            <div className="flex items-center gap-4 ml-auto">
+                {countdown > 0 && <span className="text-black text-lg">{ countdown }</span>}
+                {displayButton(poker.option.allowOthersToShowEstimates) && <Button
+                    variant="contained"
+                    color="success"
+                    className="whitespace-nowrap"
+                    onClick={flipCard}
+                    disabled={poker.estimateStatus === 'CLOSED' && !isUsersExists(true)}
+                >
+                    { poker.estimateStatus === 'OPENED' ? 'Vote Next Issue' : 'Show Cards' }
+                </Button>}
             </div>
 
 

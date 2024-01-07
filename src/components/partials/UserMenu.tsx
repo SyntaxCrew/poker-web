@@ -158,7 +158,7 @@ export default function UserMenu() {
 
                 {menu.filter(menuItems => menuItems.filter(menuItem => !menuItem.hasMenu || menuItem.hasMenu(profile))?.length > 0).map((menuItems, index) => {
                     return (
-                        <div key={index} className="w-64 max-w-64">
+                        <div key={index} className="w-64 max-w-full">
                             <Divider className="!my-2" />
                             {menuItems.filter(menuItem => !menuItem.hasMenu || menuItem.hasMenu(profile)).map((menuItem, itemIndex) => {
                                 return (
