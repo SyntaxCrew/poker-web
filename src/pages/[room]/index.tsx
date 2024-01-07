@@ -5,6 +5,8 @@ import JoinGameDialog from "../../components/dialog/JoinGameDialog";
 import UserCard from "../../components/partials/UserCard";
 import EstimatePointCard from "../../components/shared/EstimatePointCard";
 import { joinPokerRoom, leavePokerRoom, updateEstimateStatus, pokeCard, checkPokerRoom } from '../../repository/firestore/poker';
+import { Map } from "../../models/generic";
+import { LinearProgress } from "@mui/material";
 
 // Object keys sequence
 // 1. Wait for fetched profile from App.tsx and inject into global context
@@ -25,6 +27,8 @@ export default function PokerRoomPage() {
     const [isOpenDialog, setOpenDialog] = useState(false);
     const [displayName, setDisplayName] = useState('');
     const [isSpectator, setSpectator] = useState(false);
+
+    const [summary, setSummary] = useState<{result: Map<number>, max: number, total: number, average: number}>({result: {}, max: 0, total: 0, average: 0});
 
     useBeforeUnload(async () => await leavePokerRoom(profile.userUUID, profile.sessionUUID, room!));
     useEffect(() => {
@@ -121,6 +125,38 @@ export default function PokerRoomPage() {
         }
     }
 
+    useEffect(() => {
+        if (poker?.estimateStatus === 'OPENED') {
+            result();
+        }
+    }, [poker?.estimateStatus])
+
+    const result = () => {
+        if (!poker || poker.estimateStatus !== 'OPENED') {
+            return;
+        }
+        let total = 0;
+        let sum = 0;
+        let isNumberTotal = 0;
+        const result: Map<number> = {};
+        const validUsers = Object.values(poker.user).filter(user => user.estimatePoint != null);
+        for (const user of validUsers) {
+            total++;
+            if (Number(user.estimatePoint)) {
+                isNumberTotal++;
+                sum += Number(user.estimatePoint);
+            }
+            result[user.estimatePoint!] = result[user.estimatePoint!] ? result[user.estimatePoint!]+1 : 1;
+        }
+        let max = 0;
+        for (const count of Object.values(result)) {
+            if (count > max) {
+                max = count;
+            }
+        }
+        setSummary({ result, max, total, average: sum/isNumberTotal });
+    }
+
     return (
         <>
             <JoinGameDialog
@@ -175,7 +211,30 @@ export default function PokerRoomPage() {
                         })}
                     </div>
                 }
-                {poker?.estimateStatus === 'OPENED' && <div className="text-black">RESULT VOTES</div>}
+                {poker?.estimateStatus === 'OPENED' && <div className="w-fit flex justify-center items-center p-2 sm:p-4 m-auto gap-8">
+                    {Object.entries(summary.result).sort(([a], [b]) => a.localeCompare(b)).map(([point, vote]) => {
+                        return (
+                            <div className={"flex flex-col justify-center items-center relative " + (vote === summary.max ? 'text-black' : 'text-gray-400')} key={point}>
+                                <div className="left-4 top-50 -translate-y-3 absolute">
+                                    <LinearProgress color="inherit" variant="determinate" value={(vote/summary.total)*100} className="-rotate-90 w-20 !h-2 !rounded-lg" />
+                                </div>
+                                <div
+                                    key={point}
+                                    className={"min-w-12 max-w-12 h-20 rounded-md flex items-center border-2 " + (vote === summary.max ? 'border-black' : 'border-gray-400')}
+                                >
+                                    <span className="m-auto font-bold text-xl">{ point }</span>
+                                </div>
+                                <span>{ vote } Vote</span>
+                            </div>
+                        );
+                    })}
+                    {poker?.option.showAverage && <div className="ml-2 flex flex-col justify-center items-center">
+                        <div className="text-gray-500">Average:</div>
+                        <div className="text-black font-bold text-xl">
+                            {summary.average.toFixed(2)}
+                        </div>
+                    </div>}
+                </div>}
             </div>
         </>
     );
