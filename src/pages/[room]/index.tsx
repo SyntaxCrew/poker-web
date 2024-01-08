@@ -169,31 +169,29 @@ export default function PokerRoomPage() {
                 }}
             />
 
-            <div className="relative w-screen top-20 min-h-100 flex overflow-y-auto bg-white">
-                {!isLoading && poker && (
-                    <div className="px-4 flex gap-4 flex-wrap w-fit h-full justify-center items-center m-auto min-h-[calc(100vh-5rem)] pb-32 pt-4">
-                        {
-                            Object.
-                                keys(poker.user).
-                                sort((a, b) => poker.user[a].displayName?.localeCompare(poker.user[b].displayName || '')).
-                                filter(userUUID => poker.user[userUUID].displayName && !poker.user[userUUID].isSpectator && ((poker.user[userUUID].estimatePoint != null && poker.estimateStatus !== 'CLOSED') || poker.user[userUUID].activeSessions?.length)).
-                                map(userUUID => {
-                                    return (
-                                        <UserCard
-                                            key={userUUID}
-                                            roomID={room!}
-                                            userUUID={userUUID}
-                                            displayName={poker.user[userUUID].displayName}
-                                            isShowEstimates={poker.estimateStatus === 'OPENED'}
-                                            estimatePoint={poker.user[userUUID].estimatePoint}
-                                            allowOthersToDeleteEstimates={poker.estimateStatus !== 'OPENING' && (poker.user[profile.userUUID]?.isFacilitator || poker.option.allowOthersToDeleteEstimates) && userUUID !== profile.userUUID}
-                                        />
-                                    )
-                                })
-                        }
-                    </div>
-                )}
-            </div>
+            {!isLoading && poker && (
+                <div className="px-4 flex gap-4 flex-wrap w-full h-full justify-center items-center m-auto min-h-[calc(100vh-5rem)] pb-32 pt-4">
+                    {
+                        Object.
+                            keys(poker.user).
+                            sort((a, b) => poker.user[a].displayName?.localeCompare(poker.user[b].displayName || '')).
+                            filter(userUUID => poker.user[userUUID].displayName && !poker.user[userUUID].isSpectator && ((poker.user[userUUID].estimatePoint != null && poker.estimateStatus !== 'CLOSED') || poker.user[userUUID].activeSessions?.length)).
+                            map(userUUID => {
+                                return (
+                                    <UserCard
+                                        key={userUUID}
+                                        roomID={room!}
+                                        userUUID={userUUID}
+                                        displayName={poker.user[userUUID].displayName}
+                                        isShowEstimates={poker.estimateStatus === 'OPENED'}
+                                        estimatePoint={poker.user[userUUID].estimatePoint}
+                                        allowOthersToDeleteEstimates={poker.estimateStatus !== 'OPENING' && (poker.user[profile.userUUID]?.isFacilitator || poker.option.allowOthersToDeleteEstimates) && userUUID !== profile.userUUID}
+                                    />
+                                )
+                            })
+                    }
+                </div>
+            )}
 
             <div className="fixed z-10 bottom-0 swipe bg-white w-full overflow-x-auto">
                 {poker && poker?.estimateStatus !== 'OPENED' && poker.user[profile.userUUID]?.activeSessions?.length > 0 && !poker.user[profile.userUUID]?.isSpectator &&
@@ -228,6 +226,7 @@ export default function PokerRoomPage() {
                             </div>
                         );
                     })}
+
                     {poker?.option.showAverage && !isNaN(Number(summary.average)) && <div className="ml-2 flex flex-col justify-center items-center">
                         <div className="text-gray-500">Average:</div>
                         <div className="text-black font-bold text-xl">

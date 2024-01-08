@@ -52,7 +52,9 @@ function App() {
           <Alert isShowAlert={alert.isShow} message={alert.message} severity={alert.severity} onDismiss={() => setAlert({...alert, isShow: false})} />
           <LoadingScreen isLoading={isLoading} />
           <Topbar />
-          <Router />
+          <div className="relative w-screen top-20 min-h-100 overflow-y-auto bg-white">
+            <Router />
+          </div>
         </GlobalContext.Provider>
       </ThemeProvider>
     </>
