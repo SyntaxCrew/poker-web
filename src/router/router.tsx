@@ -27,7 +27,7 @@ const routers: RouterObject[] = [
 ];
 
 export function Page(props: {element: React.ReactNode, title?: string}) {
-    document.title = `Tokagile Poker | ${props.title || 'Not Found'}`;
+    document.title = `Poker | ${props.title || 'Not Found'}`;
     return props.element;
 }
 
