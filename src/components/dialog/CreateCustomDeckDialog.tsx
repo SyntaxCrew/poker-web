@@ -38,7 +38,7 @@ export default function CreateCustomDeck(props: {onSubmit: (value: Deck) => Prom
         await props.onSubmit({
             deckID: '',
             deckName: deckName.trim(),
-            deckValues: deckValues.trim().split(','),
+            deckValues: deckValues.trim().split(',').map(deckValue => deckValue.trim()),
             isDefault: false,
         });
         setDeckName('My custom deck');
