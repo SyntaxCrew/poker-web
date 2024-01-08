@@ -25,7 +25,7 @@ export default function VotingHistoryDialog(props: {open: boolean, onClose?: () 
                                 return (
                                     <TableRow key={index}>
                                         <TableCell component="th" scope="row">{ history.issueName || '-' }</TableCell>
-                                        <TableCell component="th" scope="row">{ history.result || '-' }</TableCell>
+                                        <TableCell component="th" scope="row">{ history.result?.length > 0 ? history.result : '-' }</TableCell>
                                         <TableCell component="th" scope="row">{ history.duration || '-' }</TableCell>
                                         <TableCell component="th" scope="row">{ history.date.toDate().toLocaleString('en-US') }</TableCell>
                                         <TableCell component="th" scope="row">{ history.voted }/{ history.total }</TableCell>

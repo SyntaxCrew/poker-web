@@ -5,6 +5,7 @@ import { Map } from "../../models/generic";
 import { EstimateStatus, Poker, PokerHistory, PokerOption } from "../../models/poker";
 import { randomString } from "../../utils/generator";
 import { timeDiffString } from "../../utils/time";
+import { numberFormat } from "../../utils/number";
 
 const pokerCollection = "poker";
 const pokerDoc = (roomID: string) => doc(firestore, pokerCollection, roomID).withConverter(converter<Poker>());
@@ -197,7 +198,7 @@ export async function updateEstimateStatus(roomID: string, estimateStatus: Estim
                     total: 0,
                     voted: 0,
                     playerResult: [],
-                    result: '', // average or median or mode
+                    result: getSummaryEstimateResult(poker), // average or median or mode
                 }
                 if (poker.votingAt) {
                     pokerHistory.duration = timeDiffString(poker.votingAt.toDate(), now.toDate())
@@ -243,4 +244,38 @@ async function newJoiner(userUUID: string, roomID: string, displayName: string, 
         [`user.${userUUID}.isSpectator`]: isSpectator,
         updatedAt: Timestamp.fromDate(new Date()),
     });
+}
+
+function getSummaryEstimateResult(poker: Poker) {
+    let sum = 0;
+    let isNumberTotal = 0;
+    let lastMaxPoint = "";
+    const result: Map<number> = {};
+    const validUsers = Object.values(poker.user).filter(user => user.estimatePoint != null);
+    for (const user of validUsers) {
+        if (!isNaN(Number(user.estimatePoint))) {
+            isNumberTotal++;
+            sum += Number(user.estimatePoint);
+        }
+        result[user.estimatePoint!] = result[user.estimatePoint!] ? result[user.estimatePoint!]+1 : 1;
+    }
+
+    let max = 0;
+    for (const count of Object.values(result)) {
+        if (count > max) {
+            max = count;
+        }
+    }
+
+    const average = sum/isNumberTotal;
+    if (isNumberTotal > 0 && !isNaN(Number(average))) {
+        return numberFormat(average).toString();
+    }
+
+    for (const [point, count] of Object.entries(result)) {
+        if (count === max) {
+            lastMaxPoint = point;
+        }
+    }
+    return lastMaxPoint;
 }

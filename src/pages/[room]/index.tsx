@@ -7,6 +7,7 @@ import EstimatePointCard from "../../components/shared/EstimatePointCard";
 import { joinPokerRoom, leavePokerRoom, updateEstimateStatus, pokeCard, checkPokerRoom } from '../../repository/firestore/poker';
 import { Map } from "../../models/generic";
 import { LinearProgress } from "@mui/material";
+import { numberFormat } from "../../utils/number";
 
 // Object keys sequence
 // 1. Wait for fetched profile from App.tsx and inject into global context
@@ -229,9 +230,7 @@ export default function PokerRoomPage() {
 
                     {poker?.option.showAverage && !isNaN(Number(summary.average)) && <div className="ml-2 flex flex-col justify-center items-center">
                         <div className="text-gray-500">Average:</div>
-                        <div className="text-black font-bold text-xl">
-                            {new Intl.NumberFormat('en-IN', {maximumFractionDigits: 2}).format(summary.average || 0)}
-                        </div>
+                        <div className="text-black font-bold text-xl">{numberFormat(summary.average || 0)}</div>
                     </div>}
                 </div>}
             </div>
