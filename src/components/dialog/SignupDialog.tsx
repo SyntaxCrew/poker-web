@@ -97,7 +97,7 @@ export default function SignupDialog(props: {open: boolean, onSubmit?: () => voi
                 alert({message: 'Sign in with google successfully', severity: 'success'});
             }
         } catch (error) {
-            alert({message: 'Sign in failed, please try again!', severity: 'success'});
+            alert({message: 'Sign in failed, please try again!', severity: 'error'});
         }
         setLoading(false);
     }
