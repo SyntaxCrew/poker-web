@@ -16,7 +16,7 @@ import { joinGame } from "../../repository/firestore/poker";
 import { getUserProfile, updateUserProfile } from "../../repository/firestore/user";
 
 export default function UserMenu() {
-    const { setLoading, alert, setProfile, profile, poker } = useContext(GlobalContext);
+    const { sessionID, setLoading, alert, setProfile, profile, poker } = useContext(GlobalContext);
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -42,11 +42,11 @@ export default function UserMenu() {
                 prefixIcon: <Visibility fontSize="small" />,
                 text: 'Spectator Mode',
                 hasMenu: () => poker !== undefined,
-                onClick: () => poker && joinGame(poker, profile.userUUID, profile.sessionUUID, poker.roomID, poker.user[profile.userUUID]?.isSpectator ? 'join' : 'leave'),
+                onClick: () => poker && joinGame(poker, profile.userUUID, sessionID, poker.roomID, poker.user[profile.userUUID]?.isSpectator ? 'join' : 'leave'),
                 suffix: <Switch
                     size="small"
                     checked={poker?.user[profile.userUUID]?.isSpectator}
-                    onChange={() => poker && joinGame(poker, profile.userUUID, profile.sessionUUID, poker.roomID, poker.user[profile.userUUID]?.isSpectator ? 'join' : 'leave')}
+                    onChange={() => poker && joinGame(poker, profile.userUUID, sessionID, poker.roomID, poker.user[profile.userUUID]?.isSpectator ? 'join' : 'leave')}
                 />
             },
             {

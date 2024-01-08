@@ -5,7 +5,6 @@ import firestore from "../../firebase/firestore";
 import { getFileURL, uploadFile } from "../../firebase/storage";
 import { converter } from "../../models/firestore";
 import { User, UserProfile } from "../../models/user";
-import { randomString } from "../../utils/generator";
 
 const userCollection = "user";
 const userDoc = (userUID: string) => doc(firestore, userCollection, userUID).withConverter(converter<User>());
@@ -24,7 +23,6 @@ export async function getUserProfile(): Promise<UserProfile | undefined> {
                 displayName: currentUser.displayName || 'Guest',
                 isAnonymous: currentUser.isAnonymous,
                 imageURL,
-                sessionUUID: randomString(20),
             };
         }
 
@@ -40,7 +38,6 @@ export async function getUserProfile(): Promise<UserProfile | undefined> {
                 displayName: user.displayName || '',
                 isAnonymous: false,
                 imageURL: imageURL || currentUser.photoURL || undefined,
-                sessionUUID: randomString(20),
             };
         }
     }

@@ -17,7 +17,7 @@ import { numberFormat } from "../../utils/number";
 // 3. Set page status to ready, then subscribe poker room with realtime data
 
 export default function PokerRoomPage() {
-    const { isLoading, setLoading, profile, poker, setPoker, isPageReady } = useContext(GlobalContext);
+    const { sessionID, isLoading, setLoading, profile, poker, setPoker, isPageReady } = useContext(GlobalContext);
     const { room } = useParams();
     const navigate = useNavigate();
 
@@ -31,7 +31,7 @@ export default function PokerRoomPage() {
 
     const [summary, setSummary] = useState<{result: Map<number>, max: number, total: number, average?: number}>({result: {}, max: 0, total: 0, average: 0});
 
-    useBeforeUnload(async () => await leavePokerRoom(profile.userUUID, profile.sessionUUID, room!));
+    useBeforeUnload(async () => await leavePokerRoom(profile.userUUID, sessionID, room!));
     useEffect(() => {
         setLoading(true);
         if (isPageReady) {
@@ -62,7 +62,7 @@ export default function PokerRoomPage() {
         try {
             await joinPokerRoom({
                 userUUID: profile.userUUID,
-                sessionUUID: profile.sessionUUID,
+                sessionUUID: sessionID,
                 roomID: room!,
                 onNotFound: () => navigate('/'),
                 onNewJoiner() {

@@ -3,6 +3,7 @@ import { UserProfile } from "../models/user";
 import { Poker } from "../models/poker";
 
 const GlobalContext = createContext<{
+    sessionID: string,
     profile: UserProfile,
     setProfile: Dispatch<SetStateAction<UserProfile>>,
     alert: (alert: {message: string, severity: "success" | "info" | "warning" | "error"}) => void,
@@ -12,7 +13,8 @@ const GlobalContext = createContext<{
     setPoker: Dispatch<SetStateAction<Poker | undefined>>,
     isPageReady: boolean,
 }>({
-    profile: {isAnonymous: true, userUUID: '', sessionUUID: '', displayName: 'Guest'},
+    sessionID: '',
+    profile: {isAnonymous: true, userUUID: '', displayName: 'Guest'},
     setProfile: () => {},
     alert: () => {},
     isLoading: false,

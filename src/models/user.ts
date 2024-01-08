@@ -6,7 +6,6 @@ export interface UserProfile {
     email?: string
     imageURL?: string
     isAnonymous: boolean
-    sessionUUID: string
 }
 
 export interface User {

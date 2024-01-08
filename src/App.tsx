@@ -10,6 +10,7 @@ import { Poker } from './models/poker';
 import { UserProfile } from './models/user';
 import { getUserProfile } from './repository/firestore/user';
 import Router from "./router/router";
+import { randomString } from './utils/generator';
 
 function App() {
   const theme = createTheme({
@@ -23,9 +24,10 @@ function App() {
 
   const location = useLocation();
 
+  const [sessionID] = useState(randomString(20));
   const [isLoading, setLoading] = useState<boolean>(false);
   const [alert, setAlert] = useState<AlertModel>({isShow: false, message: '', severity: 'info'});
-  const [profile, setProfile] = useState<UserProfile>({isAnonymous: true, userUUID: '', sessionUUID: '', displayName: ''});
+  const [profile, setProfile] = useState<UserProfile>({isAnonymous: true, userUUID: '', displayName: ''});
   const [poker, setPoker] = useState<Poker>();
   const [isPageReady, setPageReady] = useState(false);
 
@@ -48,7 +50,7 @@ function App() {
   return (
     <>
       <ThemeProvider theme={theme}>
-        <GlobalContext.Provider value={{profile, setProfile, alert: (alert => setAlert({...alert, isShow: true})), isLoading, setLoading, poker, setPoker, isPageReady}}>
+        <GlobalContext.Provider value={{sessionID, profile, setProfile, alert: (alert => setAlert({...alert, isShow: true})), isLoading, setLoading, poker, setPoker, isPageReady}}>
           <Alert isShowAlert={alert.isShow} message={alert.message} severity={alert.severity} onDismiss={() => setAlert({...alert, isShow: false})} />
           <LoadingScreen isLoading={isLoading} />
           <Topbar />
