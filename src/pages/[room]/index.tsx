@@ -169,9 +169,9 @@ export default function PokerRoomPage() {
                 }}
             />
 
-            <div className="top-16 relative h-[calc(100vh-4rem-7rem)] max-h-[calc(100vh-4rem-7rem)] overflow-y-auto bg-white">
+            <div className="relative w-screen top-20 min-h-100 flex overflow-y-auto bg-white">
                 {!isLoading && poker && (
-                    <div className="p-2 sm:p-4 flex gap-4 flex-wrap w-fit h-full justify-center items-center m-auto">
+                    <div className="px-4 flex gap-4 flex-wrap w-fit h-full justify-center items-center m-auto min-h-[calc(100vh-5rem)] pb-32 pt-4">
                         {
                             Object.
                                 keys(poker.user).
