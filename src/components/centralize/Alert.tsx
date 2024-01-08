@@ -30,6 +30,7 @@ export default function Alert(props: {isShowAlert: boolean, onDismiss: (isShowAl
                         <AlertMaterial
                             className="mx-4 shadow-lg"
                             severity={severity}
+                            elevation={8}
                             action={
                                 <IconButton
                                     aria-label="close"

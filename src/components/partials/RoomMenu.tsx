@@ -111,7 +111,7 @@ export default function RoomMenu() {
             {
                 prefixIcon: <GroupRemove fontSize="small" />,
                 text: 'Clear Users',
-                hasMenu: () => poker.user[profile.userUUID]?.isFacilitator || poker.option.allowOthersToClearUsers,
+                hasMenu: () => true,
                 onClick: () => poker && !!poker.roomID && displayButton(poker.option.allowOthersToClearUsers) && clearUsers(poker.roomID),
                 disabled: poker?.estimateStatus === 'OPENING' || !displayButton(poker.option.allowOthersToClearUsers),
             },
@@ -182,16 +182,15 @@ export default function RoomMenu() {
             </Menu>
 
             <div className="flex items-center gap-4 ml-auto">
-                {countdown > 0 && <span className="text-black text-lg">{ countdown }</span>}
-                {displayButton(poker.option.allowOthersToShowEstimates) && <Button
+                <Button
                     variant="contained"
                     color="success"
                     className="whitespace-nowrap"
                     onClick={flipCard}
-                    disabled={poker.estimateStatus === 'CLOSED' && !isUsersExists(true)}
+                    disabled={(poker.estimateStatus === 'CLOSED' && !isUsersExists(true)) || !displayButton(poker.option.allowOthersToShowEstimates)}
                 >
-                    { poker.estimateStatus === 'OPENED' ? 'Vote Next Issue' : 'Show Cards' }
-                </Button>}
+                    { poker.estimateStatus === 'OPENED' ? 'Vote Next Issue' : poker.estimateStatus === 'OPENING' ? `Show in ${countdown}s` : 'Show Cards' }
+                </Button>
             </div>
 
 

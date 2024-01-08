@@ -42,6 +42,7 @@ export default function UserMenu() {
                 prefixIcon: <Visibility fontSize="small" />,
                 text: 'Spectator Mode',
                 hasMenu: () => poker !== undefined,
+                onClick: () => poker && joinGame(poker, profile.userUUID, profile.sessionUUID, poker.roomID, poker.user[profile.userUUID]?.isSpectator ? 'join' : 'leave'),
                 suffix: <Switch
                     size="small"
                     checked={poker?.user[profile.userUUID]?.isSpectator}

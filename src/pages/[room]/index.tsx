@@ -28,7 +28,7 @@ export default function PokerRoomPage() {
     const [displayName, setDisplayName] = useState('');
     const [isSpectator, setSpectator] = useState(false);
 
-    const [summary, setSummary] = useState<{result: Map<number>, max: number, total: number, average: number}>({result: {}, max: 0, total: 0, average: 0});
+    const [summary, setSummary] = useState<{result: Map<number>, max: number, total: number, average?: number}>({result: {}, max: 0, total: 0, average: 0});
 
     useBeforeUnload(async () => await leavePokerRoom(profile.userUUID, profile.sessionUUID, room!));
     useEffect(() => {
@@ -142,7 +142,7 @@ export default function PokerRoomPage() {
         const validUsers = Object.values(poker.user).filter(user => user.estimatePoint != null);
         for (const user of validUsers) {
             total++;
-            if (Number(user.estimatePoint)) {
+            if (!isNaN(Number(user.estimatePoint))) {
                 isNumberTotal++;
                 sum += Number(user.estimatePoint);
             }
@@ -169,9 +169,9 @@ export default function PokerRoomPage() {
                 }}
             />
 
-            <div className="p-2 sm:p-4 top-16 relative h-[calc(100vh-4rem-7rem)] bg-white">
+            <div className="top-16 relative h-[calc(100vh-4rem-7rem)] max-h-[calc(100vh-4rem-7rem)] overflow-y-auto bg-white">
                 {!isLoading && poker && (
-                    <div className="flex gap-4 flex-wrap w-fit h-full justify-center items-center m-auto">
+                    <div className="p-2 sm:p-4 flex gap-4 flex-wrap w-fit h-full justify-center items-center m-auto">
                         {
                             Object.
                                 keys(poker.user).
@@ -195,7 +195,7 @@ export default function PokerRoomPage() {
                 )}
             </div>
 
-            <div className="absolute z-10 bottom-0 bg-white w-full overflow-x-auto">
+            <div className="fixed z-10 bottom-0 swipe bg-white w-full overflow-x-auto">
                 {poker && poker?.estimateStatus !== 'OPENED' && poker.user[profile.userUUID]?.activeSessions?.length > 0 && !poker.user[profile.userUUID]?.isSpectator &&
                     <div className="w-fit flex justify-center items-center gap-3 p-2 sm:p-4 m-auto">
                         {poker?.option.estimateOption.decks.find(deck => deck.deckID === poker.option.estimateOption.activeDeckID)?.deckValues.map(estimatePoint => {
@@ -228,10 +228,10 @@ export default function PokerRoomPage() {
                             </div>
                         );
                     })}
-                    {poker?.option.showAverage && summary.average && <div className="ml-2 flex flex-col justify-center items-center">
+                    {poker?.option.showAverage && !isNaN(Number(summary.average)) && <div className="ml-2 flex flex-col justify-center items-center">
                         <div className="text-gray-500">Average:</div>
                         <div className="text-black font-bold text-xl">
-                            {summary.average.toPrecision(2)}
+                            {new Intl.NumberFormat('en-IN', {maximumFractionDigits: 2}).format(summary.average || 0)}
                         </div>
                     </div>}
                 </div>}

@@ -6,7 +6,7 @@ import UserMenu from '../partials/UserMenu';
 export default function Topbar() {
     return (
         <>
-            <div className="fixed h-16 w-full">
+            <div className="fixed h-16 w-full z-10">
                 <div className="flex items-center justify-between px-2 sm:px-4 gap-4 h-20 bg-white">
                     <div className="flex items-center gap-2 w-full overflow-hidden">
                         <Link to='/'>
