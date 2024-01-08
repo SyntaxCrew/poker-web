@@ -48,16 +48,16 @@ export default function HomePage() {
 
     return (
         <>
-            <div className="w-screen h-screen flex overflow-y-auto">
+            <div className="relative w-screen top-20 min-h-[calc(100vh-5rem)] flex overflow-y-auto">
                 <div className="w-full bg-white px-6 max-[900px]:hidden" id="home-page-logo">
                     <div className="relative top-1/2 -translate-y-1/2 overflow-y-auto">
                         <img className="m-auto" src={ScrumPokerImg} alt="Scrum Poker" />
                     </div>
                 </div>
                 <div className="w-full bg-white p-4">
-                    <div className="relative top-1/2 -translate-y-1/2 overflow-y-auto">
-                        <Card className="w-96 max-w-fit m-auto rounded-md p-4 flex flex-col gap-4 shadow-xl !bg-gray-50" elevation={8}>
-                            <div className="text-center text-3xl font-bold">Poker</div>
+                    <div className="relative top-1/2 -translate-y-1/2">
+                        <Card className="w-96 max-w-full m-auto rounded-md p-4 flex flex-col gap-4 shadow-xl !bg-gray-50" elevation={8}>
+                            <div className="text-center text-3xl font-bold text-ellipsis overflow-hidden whitespace-nowrap">Poker</div>
                             <Divider />
                             <div className="flex gap-4">
                                 <TextField

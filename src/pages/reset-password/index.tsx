@@ -87,18 +87,18 @@ export default function ResetPasswordPage() {
     }
 
     return (
-        <div className="w-screen h-screen flex overflow-y-auto bg-white">
+        <div className="relative w-screen top-20 min-h-[calc(100vh-5rem)] flex overflow-y-auto bg-white">
             <div className="w-full px-6 max-[900px]:hidden" id="reset-password-page-logo">
                 <div className="relative top-1/2 -translate-y-1/2 overflow-y-auto">
                     <img className="m-auto" src={LoginLogo} alt="Scrum Poker" />
                 </div>
             </div>
             <div className="w-full p-4">
-                <div className="relative top-1/2 -translate-y-1/2 overflow-y-auto">
-                    <Card className="max-w-fit m-auto rounded-md p-4 flex flex-col gap-4 w-full shadow-xl border-2 border-gray-200" elevation={4}>
-                        <div className="text-center text-3xl font-bold">Reset Password</div>
+                <div className="relative top-1/2 -translate-y-1/2">
+                    <Card className="max-w-full m-auto rounded-md p-4 flex flex-col gap-4 w-96 shadow-xl border-2 border-gray-200" elevation={4}>
+                        <div className="text-center text-3xl font-bold text-ellipsis overflow-hidden whitespace-nowrap">Reset Password</div>
                         <Divider />
-                        <div className="flex flex-col gap-4 w-96">
+                        <div className="flex flex-col gap-4">
                             {inputs.map((input, index) => {
                                 return (
                                     <TextField
