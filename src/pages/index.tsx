@@ -24,11 +24,11 @@ export default function HomePage() {
         try {
             const isRoomExists = await isExistsPokerRoom(roomID);
             if (!isRoomExists) {
-                throw Error('Room number is not found');
+                throw Error('Room ID is not found');
             }
             navigate(`/${roomID}`);
         } catch (error) {
-            alert({message: `Room number is not found`, severity: 'error'});
+            alert({message: `Room ID is not found`, severity: 'error'});
         }
         setFindRoom(false);
     }
@@ -63,8 +63,8 @@ export default function HomePage() {
                                 <TextField
                                     size='medium'
                                     className='w-full rounded-md bg-white px-4'
-                                    placeholder='Enter Room Number'
-                                    label="Room Number"
+                                    placeholder='Enter Room ID'
+                                    label="Room ID"
                                     variant="outlined"
                                     value={roomID}
                                     onChange={setValue(setRoomID)}

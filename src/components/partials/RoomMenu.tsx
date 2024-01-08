@@ -1,7 +1,8 @@
 import { MouseEvent, useContext, useEffect, useState } from "react";
 import { Button, Divider, ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
-import { ExpandMore, GroupRemove, Restore, Settings } from "@mui/icons-material";
+import { ExpandMore, GroupRemove, Restore, Settings, Share } from "@mui/icons-material";
 import GameSettingDialog from "../dialog/GameSettingDialog";
+import SharedLinkDialog from "../dialog/ShareLinkDialog";
 import VotingHistoryDialog from "../dialog/VotingHistoryDialog";
 import GlobalContext from "../../context/global";
 import { Menu as MenuModel } from "../../models/menu";
@@ -11,7 +12,7 @@ import { clearUsers, updateEstimateStatus, updatePokerOption } from "../../repos
 export default function RoomMenu() {
     const { poker, profile, setLoading, alert } = useContext(GlobalContext);
 
-    type Dialog = 'game-setting' | 'voting-history' | 'close';
+    type Dialog = 'shared' | 'game-setting' | 'voting-history' | 'close';
 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [isOpenMenu, setOpenMenu] = useState(false);
@@ -111,12 +112,16 @@ export default function RoomMenu() {
             {
                 prefixIcon: <GroupRemove fontSize="small" />,
                 text: 'Clear Users',
-                hasMenu: () => true,
                 onClick: () => poker && !!poker.roomID && displayButton(poker.option.allowOthersToClearUsers) && clearUsers(poker.roomID),
                 disabled: poker?.estimateStatus === 'OPENING' || !displayButton(poker.option.allowOthersToClearUsers),
             },
         ],
         [
+            {
+                prefixIcon: <Share fontSize="small" />,
+                text: 'Shared',
+                onClick: () => setOpenDialog('shared'),
+            },
             {
                 prefixIcon: <Settings fontSize="small" />,
                 text: 'Game Settings',
@@ -127,7 +132,7 @@ export default function RoomMenu() {
                 text: 'Voting History',
                 onClick: () => setOpenDialog('voting-history'),
             },
-        ]
+        ],
     ];
     return (
         <>
@@ -193,7 +198,7 @@ export default function RoomMenu() {
                 </Button>
             </div>
 
-
+            <SharedLinkDialog open={openDialog === 'shared'} onClose={() => setOpenDialog('close')} roomID={poker.roomID} />
             <GameSettingDialog open={openDialog === 'game-setting'} onSubmit={updateGameSetting} onClose={() => setOpenDialog('close')} profile={profile} poker={poker} />
             <VotingHistoryDialog open={openDialog === 'voting-history'} onClose={() => setOpenDialog('close')} poker={poker} />
         </>
