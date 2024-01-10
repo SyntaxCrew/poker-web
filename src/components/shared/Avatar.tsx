@@ -11,7 +11,8 @@ export default function Avatar(props: {profile: UserProfile, onClick?: (event: M
                 color="inherit"
                 size="small"
                 onClick={e => props.onClick && props.onClick(e)}
-                className="w-fit"
+                className={"w-fit" + (!props.onClick ? ' !cursor-default' : '')}
+                disableTouchRipple={!props.onClick}
             >
                 {props.profile.imageURL
                     ? <ImageLoading sizeClass={sizeClass} url={props.profile.imageURL} size={props.size} className="rounded-full" />

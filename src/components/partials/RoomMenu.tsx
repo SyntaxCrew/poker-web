@@ -1,7 +1,9 @@
-import { MouseEvent, useContext, useEffect, useState } from "react";
+import { MouseEvent, useCallback, useContext, useEffect, useState } from "react";
 import { Button, Divider, ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
-import { ExpandMore, GroupRemove, Restore, Settings, Share } from "@mui/icons-material";
+import { ExpandMore, GroupRemove, Restore, Settings, Share, Visibility } from "@mui/icons-material";
+import { useLocation } from "react-router-dom";
 import GameSettingDialog from "../dialog/GameSettingDialog";
+import SpectatorListDialog from "../dialog/SpectatorListDialog";
 import SharedLinkDialog from "../dialog/ShareLinkDialog";
 import VotingHistoryDialog from "../dialog/VotingHistoryDialog";
 import GlobalContext from "../../context/global";
@@ -12,7 +14,14 @@ import { clearUsers, updateEstimateStatus, updatePokerOption } from "../../repos
 export default function RoomMenu() {
     const { poker, profile, setLoading, alert } = useContext(GlobalContext);
 
-    type Dialog = 'shared' | 'game-setting' | 'voting-history' | 'close';
+    const location = useLocation();
+
+    const isPokerPath = useCallback(() => {
+        const paths = location.pathname.split('/');
+        return paths.length === 2 && paths[1].length > 0;
+    }, [location.pathname]);
+
+    type Dialog = 'shared' | 'spectators' | 'game-setting' | 'voting-history' | 'close';
 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [isOpenMenu, setOpenMenu] = useState(false);
@@ -39,18 +48,14 @@ export default function RoomMenu() {
         if (typeof timer == "number") {
             return () => clearInterval(timer);
         }
+
+        // maybe update multiple times if this room has many users
         if (poker && poker.estimateStatus !== 'OPENED') {
-            for (const userUUID of Object.keys(poker.user)) {
-                // update multiple times depend on active users
-                if (!poker.user[userUUID].isSpectator && poker.user[userUUID].estimatePoint != null) {
-                    updateEstimateStatus(poker.roomID, 'OPENED');
-                    break;
-                }
-            }
+            updateEstimateStatus(poker.roomID, 'OPENED');
         }
     }, [countdown]);
 
-    if (!poker) {
+    if (!poker || !isPokerPath()) {
         return (<></>);
     }
 
@@ -114,6 +119,11 @@ export default function RoomMenu() {
                 text: 'Clear Users',
                 onClick: () => poker && !!poker.roomID && displayButton(poker.option.allowOthersToClearUsers) && clearUsers(poker.roomID),
                 disabled: poker?.estimateStatus === 'OPENING' || !displayButton(poker.option.allowOthersToClearUsers),
+            },
+            {
+                prefixIcon: <Visibility fontSize="small" />,
+                text: 'Spectators List',
+                onClick: () => setOpenDialog('spectators'),
             },
         ],
         [
@@ -199,6 +209,7 @@ export default function RoomMenu() {
             </div>
 
             <SharedLinkDialog open={openDialog === 'shared'} onClose={() => setOpenDialog('close')} roomID={poker.roomID} />
+            <SpectatorListDialog open={openDialog === 'spectators'} onClose={() => setOpenDialog('close')} poker={poker} profile={profile} />
             <GameSettingDialog open={openDialog === 'game-setting'} onSubmit={updateGameSetting} onClose={() => setOpenDialog('close')} profile={profile} poker={poker} />
             <VotingHistoryDialog open={openDialog === 'voting-history'} onClose={() => setOpenDialog('close')} poker={poker} />
         </>

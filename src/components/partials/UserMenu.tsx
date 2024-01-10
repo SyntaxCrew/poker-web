@@ -1,5 +1,4 @@
-import { MouseEvent, useContext, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { MouseEvent, useCallback, useContext, useState } from "react";
 import { Divider, ListItemIcon, ListItemText, Menu, MenuItem, Switch, Typography } from "@mui/material";
 import { CollectionsBookmark, Logout, Login, PersonAdd, ManageAccounts, Lock, Visibility } from '@mui/icons-material';
 import ProfileDialog from "../dialog/ProfileDialog";
@@ -11,15 +10,19 @@ import Avatar from "../shared/Avatar";
 import GlobalContext from "../../context/global";
 import { Menu as MenuModel } from "../../models/menu";
 import { UserProfile } from "../../models/user";
-import { signout } from "../../firebase/authentication";
 import { joinGame } from "../../repository/firestore/poker";
-import { getUserProfile, updateUserProfile } from "../../repository/firestore/user";
+import { updateUserProfile } from "../../repository/firestore/user";
+import { useLocation } from "react-router-dom";
 
 export default function UserMenu() {
-    const { sessionID, setLoading, alert, setProfile, profile, poker } = useContext(GlobalContext);
+    const { sessionID, setLoading, alert, profile, poker } = useContext(GlobalContext);
 
-    const navigate = useNavigate();
     const location = useLocation();
+
+    const isPokerPath = useCallback(() => {
+        const paths = location.pathname.split('/');
+        return paths.length === 2 && paths[1].length > 0;
+    }, [location.pathname]);
 
     type DialogName = 'profile' | 'change-password' | 'signin' | 'signup' | 'signout' | 'close'
 
@@ -29,6 +32,8 @@ export default function UserMenu() {
     const [isTransition, setTransition] = useState(true);
 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+    const spectatorToggle = () => poker && joinGame(profile.userUUID, profile.displayName, profile.imageURL, sessionID, poker.roomID, (poker.user[profile.userUUID]?.isSpectator ?? true) ? 'join' : 'leave')
 
     const menu: MenuModel[][] = [
         [
@@ -41,13 +46,13 @@ export default function UserMenu() {
             {
                 prefixIcon: <Visibility fontSize="small" />,
                 text: 'Spectator Mode',
-                hasMenu: () => poker !== undefined,
-                onClick: () => poker && joinGame(poker, profile.userUUID, sessionID, poker.roomID, poker.user[profile.userUUID]?.isSpectator ? 'join' : 'leave'),
+                hasMenu: () => poker !== undefined && isPokerPath(),
+                onClick: spectatorToggle,
                 suffix: <Switch
                     size="small"
-                    checked={poker?.user[profile.userUUID]?.isSpectator}
-                    onChange={() => poker && joinGame(poker, profile.userUUID, sessionID, poker.roomID, poker.user[profile.userUUID]?.isSpectator ? 'join' : 'leave')}
-                />
+                    checked={poker?.user[profile.userUUID]?.isSpectator ?? true}
+                    onChange={spectatorToggle}
+                />,
             },
             {
                 prefixIcon: <ManageAccounts fontSize="small" />,
@@ -86,38 +91,13 @@ export default function UserMenu() {
     async function updateProfile(displayName: string, file?: File) {
         setLoading(true);
         try {
-            await updateUserProfile({userUID: profile.userUUID, isAnonymous: profile.isAnonymous, displayName, file});
-            const userProfile = await getUserProfile();
-            if (!userProfile) {
-                throw Error('user not found');
-            }
-            setProfile(userProfile);
+            await updateUserProfile({userUID: profile.userUUID, displayName, file});
             alert({message: 'Update profile successfully', severity: 'success'});
         } catch (error) {
             alert({message: 'Update profile failed, please try again!', severity: 'error'});
         }
         setLoading(false);
         setDialog('close');
-    }
-
-    async function signOut() {
-        setLoading(true);
-        try {
-            await signout();
-            const user = await getUserProfile();
-            if (!user) {
-                throw Error('user not found')
-            }
-            setProfile(user);
-            alert({message: 'Sign out successfully', severity: 'success'});
-            if (location.pathname !== '/') {
-                navigate('/');
-            }
-        } catch (error) {
-            alert({message: 'Sign out failed', severity: 'error'});
-        }
-        setDialog('close');
-        setLoading(false);
     }
 
     const toggle = (event: MouseEvent<HTMLButtonElement>) => {
@@ -152,7 +132,7 @@ export default function UserMenu() {
                 <div className="flex items-center gap-2 p-4 w-full max-w-64">
                     <Avatar size='medium' profile={profile} />
                     <div className="overflow-hidden mr-1">
-                        <div className="text-ellipsis whitespace-nowrap overflow-hidden font-bold">{ profile.displayName }</div>
+                        <div className="text-ellipsis whitespace-nowrap overflow-hidden font-bold">{ profile.displayName || 'Guest' }</div>
                         <div className="text-ellipsis whitespace-nowrap overflow-hidden text-gray-500">{ profile.isAnonymous ? 'Guest user' : 'User' }</div>
                     </div>
                 </div>
@@ -194,7 +174,7 @@ export default function UserMenu() {
             {!profile.isAnonymous && <ChangePasswordDialog open={openDialog === 'change-password'} profile={profile} onSubmit={() => setDialog('close')} onClose={() => setDialog('close')} />}
             {profile.isAnonymous && <SigninDialog open={openDialog === 'signin'} onClose={() => setDialog('close')} onSignup={() => setDialog('signup', true)} isTransition={isTransition} />}
             {profile.isAnonymous && <SignupDialog open={openDialog === 'signup'} onClose={() => setDialog('close')} onSignin={() => setDialog('signin', true)} isTransition={isTransition} />}
-            {!profile.isAnonymous && <SignoutDialog open={openDialog === 'signout'} onSubmit={signOut} onClose={() => setDialog('close')} />}
+            {!profile.isAnonymous && <SignoutDialog open={openDialog === 'signout'} onClose={() => setDialog('close')} />}
         </>
     );
 }

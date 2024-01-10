@@ -5,11 +5,12 @@ import HeaderDialog from "./HeaderDialog";
 import GoogleIcon from '/images/google-icon.png';
 import GlobalContext from "../../context/global";
 import { createUser, signInGoogle } from "../../firebase/authentication";
-import { getUserProfile, signin } from "../../repository/firestore/user";
+import { replaceUser } from "../../repository/firestore/poker";
+import { signin } from "../../repository/firestore/user";
 import { noSpace, pressEnter, setValue } from "../../utils/input";
 
 export default function SignupDialog(props: {open: boolean, onSubmit?: () => void, onClose?: () => void, onSignin: () => void, isTransition: boolean}) {
-    const { isLoading, setLoading, setProfile, alert } = useContext(GlobalContext);
+    const { isLoading, setLoading, alert, profile, sessionID } = useContext(GlobalContext);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isShowPassword, setShowPassword] = useState(false);
@@ -44,30 +45,23 @@ export default function SignupDialog(props: {open: boolean, onSubmit?: () => voi
         },
     ]
 
-    async function signIn() {
-        const userProfile = await getUserProfile();
-        if (!userProfile) {
-            throw Error('user not found')
-        }
-        setProfile(userProfile);
-        onClose();
-    }
-
     async function signUpWithEmailPassword() {
         if (email.length === 0 || password.length < 6 || confirmPassword.length < 6 || password !== confirmPassword) {
             return;
         }
         setLoading(true);
         try {
+            const userUUID = profile.userUUID;
             const user = await createUser(email, password);
             await signin({
                 userUID: user.uid,
                 email: user.email || undefined,
                 displayName: user.displayName || user.email?.substring(0, user.email?.indexOf('@')) || 'Username',
+                imageURL: user.photoURL || undefined,
                 isAnonymous: false,
                 isLinkGoogle: false,
             })
-            await signIn();
+            replaceUser(userUUID, user.uid, sessionID);
             alert({message: 'Sign up successfully', severity: 'success'});
         } catch (error) {
             let err = `${error}`;
@@ -84,17 +78,21 @@ export default function SignupDialog(props: {open: boolean, onSubmit?: () => voi
     async function signInWithGoogle() {
         setLoading(true);
         try {
+            const userUUID = profile.userUUID;
             const user = await signInGoogle();
             if (user) {
                 await signin({
                     userUID: user.uid,
                     email: user.email || undefined,
                     displayName: user.displayName || undefined,
+                    imageURL: user.photoURL || undefined,
                     isAnonymous: false,
                     isLinkGoogle: true,
                 });
-                await signIn();
+                replaceUser(userUUID, user.uid, sessionID);
                 alert({message: 'Sign in with google successfully', severity: 'success'});
+            } else {
+                throw Error('Sign in with google failed');
             }
         } catch (error) {
             alert({message: 'Sign in failed, please try again!', severity: 'error'});

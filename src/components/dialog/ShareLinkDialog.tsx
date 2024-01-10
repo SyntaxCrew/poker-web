@@ -73,6 +73,7 @@ export default function SharedLinkDialog(props: {open: boolean, onClose?: () => 
                                 InputProps={{
                                     endAdornment: <InputAdornment position="end" >
                                         <Tooltip
+                                            arrow
                                             placement="top"
                                             title={!input.countdown ? 'Copy to clipboard' : 'Copied!'}
                                             slotProps={{

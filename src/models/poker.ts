@@ -20,6 +20,7 @@ export interface Poker {
 
 export interface PokerUser {
     displayName: string
+    imageURL?: string
     estimatePoint?: string
     activeSessions: string[]
     isFacilitator?: boolean

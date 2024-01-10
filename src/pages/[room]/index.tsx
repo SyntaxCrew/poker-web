@@ -1,12 +1,13 @@
 import { useContext, useEffect, useState } from "react";
 import { useBeforeUnload, useNavigate, useParams } from "react-router-dom";
+import { LinearProgress } from "@mui/material";
 import GlobalContext from "../../context/global";
 import JoinGameDialog from "../../components/dialog/JoinGameDialog";
 import UserCard from "../../components/partials/UserCard";
 import EstimatePointCard from "../../components/shared/EstimatePointCard";
-import { joinPokerRoom, leavePokerRoom, updateEstimateStatus, pokeCard, checkPokerRoom } from '../../repository/firestore/poker';
 import { Map } from "../../models/generic";
-import { LinearProgress } from "@mui/material";
+import { joinPokerRoom, leavePokerRoom, updateEstimateStatus, pokeCard, checkPokerRoom } from '../../repository/firestore/poker';
+import { updateUserProfile } from "../../repository/firestore/user";
 import { numberFormat } from "../../utils/number";
 
 // Object keys sequence
@@ -30,6 +31,7 @@ export default function PokerRoomPage() {
     const [isSpectator, setSpectator] = useState(false);
 
     const [summary, setSummary] = useState<{result: Map<number>, max: number, total: number, average?: number}>({result: {}, max: 0, total: 0, average: 0});
+    const [summaryStatus, setSummaryStatus] = useState<'set' | 'unset'>('unset');
 
     useBeforeUnload(async () => await leavePokerRoom(profile.userUUID, sessionID, room!));
     useEffect(() => {
@@ -66,34 +68,29 @@ export default function PokerRoomPage() {
                 roomID: room!,
                 onNotFound: () => navigate('/'),
                 onNewJoiner() {
-                    return { displayName, isSpectator };
+                    if (displayName !== profile.displayName) {
+                        updateUserProfile({userUID: profile.userUUID, displayName});
+                    }
+                    return { displayName, imageURL: profile.imageURL, isSpectator };
                 },
-                onNext(data) {
+                onNext(poker) {
                     try {
-                        const poker = data.data();
                         if (!poker) {
                             throw Error('poker not found');
                         }
                         setPoker(poker);
 
-                        for (const userUUID of Object.keys(poker.user)) {
-                            if (profile.userUUID === userUUID) {
-                                setCurrentEstimatePoint(poker.user[userUUID].estimatePoint);
-                                break;
-                            }
-                        }
-
                         // set timer countdown
                         if (poker.option.autoRevealCards) {
                             let isVoteAll = true;
                             let hasUser = false;
-                            for (const userUUID of Object.keys(poker.user)) {
-                                if (poker.user[userUUID].isSpectator) {
+                            for (const user of Object.values(poker.user)) {
+                                if (user.isSpectator) {
                                     continue;
                                 }
-                                if (poker.user[userUUID].activeSessions?.length > 0) {
+                                if (user.activeSessions?.length > 0) {
                                     hasUser = true;
-                                    if (poker.user[userUUID].estimatePoint == null) {
+                                    if (user.estimatePoint == null) {
                                         isVoteAll = false;
                                         break;
                                     }
@@ -127,10 +124,27 @@ export default function PokerRoomPage() {
     }
 
     useEffect(() => {
-        if (poker?.estimateStatus === 'OPENED') {
-            result();
+        if (!poker || !profile) {
+            return;
         }
-    }, [poker?.estimateStatus])
+        for (const userUUID of Object.keys(poker.user)) {
+            if (profile.userUUID === userUUID) {
+                setCurrentEstimatePoint(poker.user[userUUID].estimatePoint);
+                break;
+            }
+        }
+    }, [profile, poker])
+
+    useEffect(() => {
+        if (poker?.estimateStatus === 'OPENED') {
+            if (summaryStatus === 'unset') {
+                result();
+                setSummaryStatus('set');
+            }
+        } else {
+            setSummaryStatus('unset');
+        }
+    }, [poker?.estimateStatus, summaryStatus])
 
     const result = () => {
         if (!poker || poker.estimateStatus !== 'OPENED') {
@@ -175,15 +189,17 @@ export default function PokerRoomPage() {
                     {
                         Object.
                             keys(poker.user).
-                            sort((a, b) => poker.user[a].displayName?.localeCompare(poker.user[b].displayName || '')).
                             filter(userUUID => poker.user[userUUID].displayName && !poker.user[userUUID].isSpectator && ((poker.user[userUUID].estimatePoint != null && poker.estimateStatus !== 'CLOSED') || poker.user[userUUID].activeSessions?.length)).
+                            sort((a, b) => (!poker.user[a].displayName || !poker.user[b].displayName || poker.user[a].displayName === poker.user[b].displayName) ? a.localeCompare(b) : poker.user[a].displayName.localeCompare(poker.user[b].displayName)).
                             map(userUUID => {
                                 return (
                                     <UserCard
                                         key={userUUID}
                                         roomID={room!}
                                         userUUID={userUUID}
+                                        imageURL={poker.user[userUUID].imageURL}
                                         displayName={poker.user[userUUID].displayName}
+                                        isYou={userUUID === profile.userUUID}
                                         isShowEstimates={poker.estimateStatus === 'OPENED'}
                                         estimatePoint={poker.user[userUUID].estimatePoint}
                                         allowOthersToDeleteEstimates={poker.estimateStatus !== 'OPENING' && (poker.user[profile.userUUID]?.isFacilitator || poker.option.allowOthersToDeleteEstimates) && userUUID !== profile.userUUID}

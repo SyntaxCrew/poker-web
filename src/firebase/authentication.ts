@@ -1,15 +1,31 @@
-import { getAuth, onAuthStateChanged, signInAnonymously, signInWithPopup, GoogleAuthProvider, signOut, updateProfile, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, checkActionCode, confirmPasswordReset, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
+import { getAuth, onAuthStateChanged, signInAnonymously, signInWithPopup, GoogleAuthProvider, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, checkActionCode, confirmPasswordReset, EmailAuthProvider, reauthenticateWithCredential, updatePassword, NextOrObserver, User } from "firebase/auth";
 import app from "./firebase";
-import { AnonymousLocalStorageKey } from "../models/key";
+import { signin } from "../repository/firestore/user";
 
 const auth = getAuth(app);
+let isObserveOnInitial = false;
 onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-        Object.values(AnonymousLocalStorageKey).forEach(key => localStorage.removeItem(key));
-        const userCredential = await signInAnonymously(auth);
-        await updateProfile(userCredential.user, { displayName: 'Guest' });
+    if (!user && !isObserveOnInitial) {
+        await signinAnonymous();
     }
+    isObserveOnInitial = true;
 });
+
+export async function observeAuth(onObserve: NextOrObserver<User>) {
+    onAuthStateChanged(auth, onObserve);
+}
+
+export async function signinAnonymous() {
+    await auth.authStateReady();
+    const { user } = await signInAnonymously(auth);
+    await signin({
+        userUID: user.uid,
+        email: user.email || undefined,
+        displayName: user.displayName || undefined,
+        isAnonymous: true,
+        isLinkGoogle: false,
+    });
+}
 
 export async function createUser(email: string, password: string) {
     await auth.authStateReady();
@@ -33,7 +49,6 @@ export async function signInGoogle() {
 export async function signout() {
     await auth.authStateReady();
     await signOut(auth);
-    await waitForSignin();
 }
 
 export async function getCurrentUser() {

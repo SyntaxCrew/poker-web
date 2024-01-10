@@ -5,12 +5,16 @@ export default function ImageLoading(props: {sizeClass: string, size?: 'small' |
     const imagePlaceholder = "https://www.signfix.com.au/wp-content/uploads/2017/09/placeholder-600x400.png"
     const loadingSize = !props.size ? 'min-w-7 max-w-7 min-h-7 max-h-7' : props.size === 'medium' ? `min-w-[2rem] max-w-[2rem] min-h-[2rem] max-h-[2rem]` : 'min-w-[3.5rem] max-w-[3.5rem] min-h-[3.5rem] max-h-[3.5rem]'
 
-    const [isLoading, setLoading] = useState(false);
+    const [url, setURL] = useState(props.url);
+    const [isLoading, setLoading] = useState(true);
     const [isError, setError] = useState(false);
 
     useEffect(() => {
-        setLoading(true);
-    }, [props.url]);
+        if (url != props.url) {
+            setLoading(true);
+            setURL(props.url);
+        }
+    }, [props.url, url]);
 
     return (
         <div>
@@ -22,11 +26,13 @@ export default function ImageLoading(props: {sizeClass: string, size?: 'small' |
 
             {isError && <img
                 src={imagePlaceholder}
+                referrerPolicy="no-referrer"
                 className="imgClass + ' object-cover rounded-md'"
             />}
             <img
-                src={props.url}
+                src={url}
                 alt="Image"
+                referrerPolicy="no-referrer"
                 className={(isLoading ? 'absolute w-0 h-0 opacity-0' : `object-cover hover:brightness-90 ease-in duration-200 transition-[--tw-brightness] `) + props.sizeClass + (props.className ? ' ' + props.className : '')}
                 loading="lazy"
                 onLoad={() => {setLoading(false); setError(false)}}

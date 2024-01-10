@@ -1,6 +1,8 @@
+import { Unsubscribe } from 'firebase/auth';
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { observeAuth } from './firebase/authentication';
 import GlobalContext from './context/global';
 import Alert from './components/centralize/Alert';
 import LoadingScreen from './components/centralize/LoadingScreen';
@@ -8,7 +10,7 @@ import Topbar from './components/layout/Topbar';
 import { Alert as AlertModel } from './models/alert';
 import { Poker } from './models/poker';
 import { UserProfile } from './models/user';
-import { getUserProfile } from './repository/firestore/user';
+import { watchUser } from './repository/firestore/user';
 import Router from "./router/router";
 import { randomString } from './utils/generator';
 
@@ -32,10 +34,21 @@ function App() {
   const [isPageReady, setPageReady] = useState(false);
 
   useMemo(async () => {
-    const user = await getUserProfile();
-    if (user) {
-      setProfile(user);
-    }
+    await new Promise(resolve => {
+      let unsubUser: Unsubscribe;
+      observeAuth(async (user) => {
+        if (!user) {
+          return;
+        }
+        if (unsubUser) {
+          unsubUser();
+        }
+        unsubUser = await watchUser(user.uid, userProfile => {
+          setProfile(userProfile);
+          resolve('get profile succeeded');
+        });
+      });
+    })
     setPageReady(true);
   }, []);
 
@@ -50,7 +63,7 @@ function App() {
   return (
     <>
       <ThemeProvider theme={theme}>
-        <GlobalContext.Provider value={{sessionID, profile, setProfile, alert: (alert => setAlert({...alert, isShow: true})), isLoading, setLoading, poker, setPoker, isPageReady}}>
+        <GlobalContext.Provider value={{sessionID, profile, alert: (alert => setAlert({...alert, isShow: true})), isLoading, setLoading, poker, setPoker, isPageReady}}>
           <Alert isShowAlert={alert.isShow} message={alert.message} severity={alert.severity} onDismiss={() => setAlert({...alert, isShow: false})} />
           <LoadingScreen isLoading={isLoading} />
           <Topbar />

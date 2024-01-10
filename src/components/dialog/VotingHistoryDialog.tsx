@@ -29,7 +29,7 @@ export default function VotingHistoryDialog(props: {open: boolean, onClose?: () 
                                         <TableCell component="th" scope="row">{ history.duration || '-' }</TableCell>
                                         <TableCell component="th" scope="row">{ history.date.toDate().toLocaleString('en-US') }</TableCell>
                                         <TableCell component="th" scope="row">{ history.voted }/{ history.total }</TableCell>
-                                        <TableCell component="th" scope="row">{ history.playerResult.map(player => `${player.displayName} (${player.estimatePoint})`).join(', ') }</TableCell>
+                                        <TableCell component="th" scope="row">{ history.playerResult.map(player => `${player.displayName} (${player.estimatePoint})`).join(', ') || '-' }</TableCell>
                                     </TableRow>
                                 );
                             })}

@@ -1,14 +1,16 @@
-import { DocumentData, onSnapshot, doc, setDoc, getDoc, DocumentSnapshot, updateDoc, arrayUnion, arrayRemove, FieldValue, deleteField, Timestamp } from "firebase/firestore";
+import { onSnapshot, doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove, FieldValue, deleteField, Timestamp, getDocs, query, collection, where } from "firebase/firestore";
 import firestore from "../../firebase/firestore";
+import { getFileURL } from "../../firebase/storage";
 import { converter } from "../../models/firestore";
 import { Map } from "../../models/generic";
 import { EstimateStatus, Poker, PokerHistory, PokerOption } from "../../models/poker";
 import { randomString } from "../../utils/generator";
 import { timeDiffString } from "../../utils/time";
 import { numberFormat } from "../../utils/number";
+import { userDoc } from "./user";
 
 const pokerCollection = "poker";
-const pokerDoc = (roomID: string) => doc(firestore, pokerCollection, roomID).withConverter(converter<Poker>());
+export const pokerDoc = (roomID: string) => doc(firestore, pokerCollection, roomID).withConverter(converter<Poker>());
 
 export async function isExistsPokerRoom(roomID: string) {
     const docSnap = await getDoc(pokerDoc(roomID));
@@ -27,8 +29,8 @@ export async function joinPokerRoom(req: {
     userUUID: string,
     sessionUUID: string,
     roomID: string,
-    onNewJoiner: (() => {displayName: string, isSpectator: boolean}),
-    onNext: ((snapshot: DocumentSnapshot<Poker, DocumentData>) => void),
+    onNewJoiner: (() => {displayName: string, imageURL: string | undefined, isSpectator: boolean}),
+    onNext: ((data?: Poker) => void),
     onNotFound: (() => void),
 }) {
     const docSnap = await getDoc(pokerDoc(req.roomID));
@@ -39,21 +41,35 @@ export async function joinPokerRoom(req: {
 
     // set display name on new joiner
     if (!docSnap.data().user[req.userUUID]) {
-        const { displayName, isSpectator } = req.onNewJoiner();
+        const { displayName, imageURL, isSpectator } = req.onNewJoiner();
         if (!displayName) {
             req.onNotFound();
             return;
         }
-        await newJoiner(req.userUUID, req.roomID, displayName, isSpectator);
+        await newJoiner(req.userUUID, req.roomID, displayName, imageURL, isSpectator, req.sessionUUID);
+    } else {
+        await updateActiveSession(req.userUUID, req.sessionUUID, req.roomID, 'join');
     }
 
-    // set active session
-    await updateActiveSession(req.userUUID, req.sessionUUID, req.roomID, 'join');
-
-    return onSnapshot(pokerDoc(req.roomID), req.onNext);
+    const imageMapping: Map<{objectURL?: string, signedURL?: string}> = {};
+    return onSnapshot(pokerDoc(req.roomID), async (snapshot) => {
+        const data = snapshot.data();
+        if (snapshot.exists() && data) {
+            for (const [userUUID, user] of Object.entries(data.user)) {
+                if (!imageMapping[userUUID]) {
+                    imageMapping[userUUID] = {objectURL: user.imageURL}
+                }
+                if (user.imageURL && (imageMapping[userUUID].objectURL != user.imageURL || !imageMapping[userUUID].signedURL)) {
+                    imageMapping[userUUID].signedURL = await getFileURL(user.imageURL);
+                }
+                data.user[userUUID].imageURL = imageMapping[userUUID].signedURL
+            }
+        }
+        req.onNext(data);
+    });
 }
 
-export async function createPokerRoom(userUUID: string, displayName: string, roomName: string, isSpectator: boolean, option: PokerOption): Promise<string> {
+export async function createPokerRoom(userUUID: string, displayName: string, imageURL: string | undefined, roomName: string, isSpectator: boolean, option: PokerOption): Promise<string> {
     const roomID = randomString(20);
     const poker: Poker = {
         roomID,
@@ -63,6 +79,7 @@ export async function createPokerRoom(userUUID: string, displayName: string, roo
         user: {
             [userUUID]: {
                 displayName,
+                imageURL,
                 isFacilitator: true,
                 activeSessions: [],
                 isSpectator,
@@ -77,23 +94,36 @@ export async function createPokerRoom(userUUID: string, displayName: string, roo
 }
 
 export async function updatePokerOption(roomID: string, roomName: string, oldFacilitatorUUID: string, newFacilitatorUUID: string, option: PokerOption) {
-    await updateDoc(pokerDoc(roomID), {
+    let data = {
         roomName,
         option,
-        [`user.${oldFacilitatorUUID}.isFacilitator`]: false,
-        [`user.${newFacilitatorUUID}.isFacilitator`]: true,
         updatedAt: Timestamp.fromDate(new Date()),
-    });
+    };
+    if (oldFacilitatorUUID !== newFacilitatorUUID) {
+        data = {
+            ...data,
+            [`user.${oldFacilitatorUUID}.isFacilitator`]: deleteField(),
+            [`user.${newFacilitatorUUID}.isFacilitator`]: true,
+        }
+    }
+    await updateDoc(pokerDoc(roomID), data);
 }
 
 export async function leavePokerRoom(userUUID: string, sessionUUID: string, roomID: string) {
     return await updateActiveSession(userUUID, sessionUUID, roomID, 'leave');
 }
 
-// get poker from client instead of fetch on this layer
-export async function joinGame(poker: Poker, userUUID: string, sessionUUID: string, roomID: string, event: 'join' | 'leave') {
-    const data: Map<boolean | null | FieldValue | EstimateStatus> = {
+export async function joinGame(userUUID: string, displayName: string, imageURL: string | undefined, sessionUUID: string, roomID: string, event: 'join' | 'leave') {
+    const docSnap = await getDoc(pokerDoc(roomID));
+    const poker = docSnap.data();
+    if (!poker) {
+        return;
+    }
+
+    const data: Map<boolean | null | FieldValue | EstimateStatus | string | undefined> = {
         [`user.${userUUID}.isSpectator`]: event === 'leave',
+        [`user.${userUUID}.displayName`]: displayName,
+        [`user.${userUUID}.imageURL`]: imageURL,
     }
     if (event === 'leave') {
         let isExistsUser = false;
@@ -107,10 +137,9 @@ export async function joinGame(poker: Poker, userUUID: string, sessionUUID: stri
             }
         }
         if (!isExistsUser) {
-            data.estimateStatus = 'CLOSED'
+            data.estimateStatus = 'CLOSED';
         }
         data[`user.${userUUID}.estimatePoint`] = null;
-        data[`user.${userUUID}.activeSessions`] = arrayRemove(sessionUUID);
     } else {
         data[`user.${userUUID}.activeSessions`] = arrayUnion(sessionUUID);
     }
@@ -231,6 +260,46 @@ export async function changeFacilitator(fromUserUUID: string, toUserUUID: string
     });
 }
 
+export async function revokeUser(userUID: string, sessionUUID: string) {
+    const docsSnap = await getDocs(query(collection(firestore, pokerCollection), where(`user.${userUID}`, '!=', null)));
+    docsSnap.forEach(async (result) => {
+        if (result.exists()) {
+            await updateActiveSession(userUID, sessionUUID, result.id, 'leave');
+        }
+    })
+}
+
+export async function replaceUser(fromUserUID: string, toUserUID: string, sessionUUID: string) {
+    const now = Timestamp.fromDate(new Date())
+    const toUserSnap = await getDoc(userDoc(toUserUID));
+    if (!toUserSnap.exists()) {
+        return;
+    }
+    const toUser = toUserSnap.data();
+
+    const docsSnap = await getDocs(query(
+        collection(firestore, pokerCollection).withConverter(converter<Poker>()),
+        where(`user.${fromUserUID}`, '!=', null),
+    ));
+    docsSnap.forEach(async (result) => {
+        if (result.exists()) {
+            const data = result.data();
+            const isOldUserActive = data.user[fromUserUID]?.activeSessions?.length > 0 && !data.user[fromUserUID]?.isSpectator;
+            const isNewUserActive = data.user[toUserUID]?.activeSessions?.length > 0 && !data.user[toUserUID]?.isSpectator;
+
+            await updateDoc(pokerDoc(result.id), {
+                [`user.${toUserUID}.displayName`]: toUser.displayName,
+                [`user.${toUserUID}.imageURL`]: toUser.imageURL,
+                [`user.${toUserUID}.isSpectator`]: !(isOldUserActive || isNewUserActive),
+                [`user.${toUserUID}.isFacilitator`]: data.user[toUserUID]?.isFacilitator || data.user[fromUserUID].isFacilitator,
+                [`user.${toUserUID}.activeSessions`]: arrayUnion(sessionUUID),
+                [`user.${fromUserUID}`]: deleteField(),
+                updatedAt: now,
+            })
+        }
+    })
+}
+
 async function updateActiveSession(userUUID: string, sessionUUID: string, roomID: string, event: 'join' | 'leave') {
     await updateDoc(pokerDoc(roomID), {
         [`user.${userUUID}.activeSessions`]: event === 'join' ? arrayUnion(sessionUUID) : arrayRemove(sessionUUID),
@@ -238,10 +307,12 @@ async function updateActiveSession(userUUID: string, sessionUUID: string, roomID
     });
 }
 
-async function newJoiner(userUUID: string, roomID: string, displayName: string, isSpectator: boolean) {
+async function newJoiner(userUUID: string, roomID: string, displayName: string, imageURL: string | undefined, isSpectator: boolean, sessionUUID: string) {
     await updateDoc(pokerDoc(roomID), {
         [`user.${userUUID}.displayName`]: displayName,
+        [`user.${userUUID}.imageURL`]: imageURL,
         [`user.${userUUID}.isSpectator`]: isSpectator,
+        [`user.${userUUID}.activeSessions`]: arrayUnion(sessionUUID),
         updatedAt: Timestamp.fromDate(new Date()),
     });
 }

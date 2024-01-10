@@ -6,13 +6,11 @@ import HeaderDialog from "./HeaderDialog";
 import { maximumDisplayNameLength, maximumRoomNameLength } from "../../constant/maximum-length";
 import GlobalContext from "../../context/global";
 import { Deck } from "../../models/game";
-import { AnonymousLocalStorageKey } from "../../models/key";
 import { CreatePokerOptionDialog, PokerOption } from "../../models/poker";
 import { UserProfile } from "../../models/user";
 import { createCustomDeck, deleteCustomDeck, getCustomDecks } from "../../repository/firestore/game";
 import { randomString } from "../../utils/generator";
 import { notMultiSpace, notStartWithSpace, pressEnter, setValue } from "../../utils/input";
-import { getItem } from "../../utils/local-storage";
 
 export default function CreatePokerRoomDialog(props: {isOpen: boolean, onSubmit: (result: CreatePokerOptionDialog) => void, onCancel: () => void, profile: UserProfile}) {
     const { setLoading, alert } = useContext(GlobalContext);
@@ -38,7 +36,7 @@ export default function CreatePokerRoomDialog(props: {isOpen: boolean, onSubmit:
             decks: [...defaultDecks],
             activeDeckID: defaultDecks[0].deckID,
         },
-        autoRevealCards: true,
+        autoRevealCards: false,
         allowOthersToShowEstimates: true,
         allowOthersToClearUsers: false,
         allowOthersToDeleteEstimates: false,
@@ -59,13 +57,11 @@ export default function CreatePokerRoomDialog(props: {isOpen: boolean, onSubmit:
         init();
         async function init() {
             if (props.profile.userUUID) {
-                setEstimateOptions([...defaultDecks, ...(await customDecks())]);
+                setEstimateOptions([...defaultDecks, ...(await getCustomDecks(props.profile.userUUID))]);
             }
             setDisplayName(props.profile.displayName || defaultDisplayName);
         }
     }, [props.profile]);
-
-    const customDecks = async () => !props.profile.isAnonymous ? (await getCustomDecks(props.profile.userUUID)) : (getItem<Deck[]>(AnonymousLocalStorageKey.CustomDecks, true) || [])
 
     const inputs = [
         {
@@ -167,14 +163,8 @@ export default function CreatePokerRoomDialog(props: {isOpen: boolean, onSubmit:
         }
         try {
             setLoading(true);
-            if (props.profile.isAnonymous) {
-                deck.deckID = randomString(20);
-                const customDecks = getItem<Deck[]>(AnonymousLocalStorageKey.CustomDecks, true) || [];
-                localStorage.setItem(AnonymousLocalStorageKey.CustomDecks, JSON.stringify([...customDecks, deck]))
-            } else {
-                await createCustomDeck(props.profile.userUUID, deck);
-            }
-            setEstimateOptions([...defaultDecks, ...(await customDecks())]);
+            await createCustomDeck(props.profile.userUUID, deck);
+            setEstimateOptions([...defaultDecks, ...(await getCustomDecks(props.profile.userUUID))]);
             alert({message: 'Create new custom deck successfully', severity: 'success'});
         } catch (error) {
             alert({message: 'Create new custom deck failed', severity: 'error'});
@@ -192,13 +182,8 @@ export default function CreatePokerRoomDialog(props: {isOpen: boolean, onSubmit:
         try {
             setLoading(true);
             const selectedDeckID = estimateOptions[estimateOptionIndex].deckID;
-            if (props.profile.isAnonymous) {
-                const customDecks = (getItem<Deck[]>(AnonymousLocalStorageKey.CustomDecks, true) || []).filter(d => d.deckID !== deck.deckID);
-                localStorage.setItem(AnonymousLocalStorageKey.CustomDecks, JSON.stringify([...customDecks]));
-            } else {
-                await deleteCustomDeck(props.profile.userUUID, deck);
-            }
-            const estimates = [...defaultDecks, ...(await customDecks())];
+            await deleteCustomDeck(props.profile.userUUID, deck);
+            const estimates = [...defaultDecks, ...(await getCustomDecks(props.profile.userUUID))];
             setEstimateOptions(estimates);
             setEstimateOptionIndex(estimates.findIndex(estimate => estimate.deckID === selectedDeckID));
             alert({message: 'Remove custom deck successfully', severity: 'success'});

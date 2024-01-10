@@ -4,8 +4,9 @@ import { Button, TextField, Card, Box, CircularProgress, Divider } from '@mui/ma
 import ScrumPokerImg from '/images/estimation.png';
 import GlobalContext from '../context/global';
 import CreatePokerRoomDialog from '../components/dialog/CreatePokerRoomDialog';
-import { createPokerRoom, isExistsPokerRoom } from '../repository/firestore/poker';
 import { CreatePokerOptionDialog } from '../models/poker';
+import { createPokerRoom, isExistsPokerRoom } from '../repository/firestore/poker';
+import { updateUserProfile } from '../repository/firestore/user';
 import { pressEnter, setValue } from '../utils/input';
 
 export default function HomePage() {
@@ -37,7 +38,10 @@ export default function HomePage() {
         if (profile.displayName) {
             setLoading(true);
             try {
-                const roomID = await createPokerRoom(profile.userUUID, req.displayName, req.roomName, req.isSpectator, req.option);
+                const roomID = await createPokerRoom(profile.userUUID, req.displayName, profile.imageURL, req.roomName, req.isSpectator, req.option);
+                if (req.displayName !== profile.displayName) {
+                    updateUserProfile({userUID: profile.userUUID, displayName: req.displayName});
+                }
                 navigate(`/${roomID}`);
             } catch (error) {
                 alert({message: 'Create room failed', severity: 'error'});

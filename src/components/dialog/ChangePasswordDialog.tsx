@@ -130,7 +130,7 @@ export default function ChangePasswordDialog(props: {open: boolean, profile: Use
                 <Button variant="outlined" color="error" onClick={onClose}>Cancel</Button>
                 <Button
                     variant="contained"
-                    color="error"
+                    color="success"
                     onClick={onSubmit} disabled={isLoading || oldPassword.length < 6 || newPassword.length < 6 || confirmPassword.length < 6 || newPassword !== confirmPassword}
                 >
                     Submit

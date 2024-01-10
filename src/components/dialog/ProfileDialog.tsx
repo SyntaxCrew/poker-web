@@ -33,7 +33,7 @@ export default function ProfileDialog(props: {open: boolean, profile: UserProfil
             return;
         }
         if (props.onSubmit) {
-            await props.onSubmit(displayName.trim(), inputFile);
+            await props.onSubmit(displayName.trim(), props.profile.imageURL !== profileImageURL ? inputFile : undefined);
         }
     }
 
