@@ -34,28 +34,25 @@ function App() {
   const [isPageReady, setPageReady] = useState(false);
 
   useMemo(async () => {
-    await new Promise(resolve => {
-      let unsubUser: Unsubscribe;
-      observeAuth(async (user) => {
-        if (!user) {
-          return;
-        }
-        if (unsubUser) {
-          unsubUser();
-        }
-        unsubUser = await watchUser(user.uid, userProfile => {
-          setProfile(userProfile);
-          resolve('get profile succeeded');
-        });
+    let unsubUser: Unsubscribe;
+    observeAuth(async (user) => {
+      if (!user) {
+        return;
+      }
+      if (unsubUser) {
+        unsubUser();
+      }
+      unsubUser = await watchUser(user.uid, userProfile => {
+        setProfile(userProfile);
+        setPageReady(true);
       });
-    })
-    setPageReady(true);
+    });
   }, []);
 
   // Clear poker data for re-render topbar
   useEffect(() => {
     const paths = location.pathname.split('/');
-    if (paths.length !== 2 || paths[1].length === 0) {
+    if (paths.length !== 2 || paths[1].length === 0 || paths[1] === 'reset-password') {
       setPoker(undefined);
     }
   }, [location.pathname])

@@ -1,3 +1,4 @@
+import { AuthErrorCodes } from "firebase/auth";
 import { useContext, useState } from "react";
 import { Button, Dialog, DialogContent, Divider, IconButton, InputAdornment, TextField, Typography } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
@@ -65,9 +66,9 @@ export default function SignupDialog(props: {open: boolean, onSubmit?: () => voi
             alert({message: 'Sign up successfully', severity: 'success'});
         } catch (error) {
             let err = `${error}`;
-            if (err.includes('email-already-in-use')) {
+            if (err.includes(AuthErrorCodes.EMAIL_EXISTS)) {
                 err = `Email is already in used, please try again!`
-            } else if (err.includes('invalid-email')) {
+            } else if (err.includes(AuthErrorCodes.INVALID_EMAIL)) {
                 err = `Email is invalid, please try again!`
             }
             alert({message: err, severity: 'error'});

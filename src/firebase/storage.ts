@@ -6,7 +6,7 @@ const storage = getStorage(app);
 const bucket = (url: string) => ref(storage, url);
 
 export async function getFileURL(url: string) {
-    if (!url.startsWith('https://')) {
+    if (url && !url.startsWith('https://')) {
         return await getDownloadURL(bucket(url));
     }
     return url;
@@ -23,7 +23,7 @@ export async function uploadFile(folder: string, file: File) {
 }
 
 export async function deleteFile(filePath: string) {
-    if (!filePath.startsWith('https://')) {
+    if (filePath && !filePath.startsWith('https://')) {
         await deleteObject(bucket(filePath));
     }
 }
