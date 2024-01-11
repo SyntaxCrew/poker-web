@@ -2,7 +2,7 @@ import { Unsubscribe } from 'firebase/auth';
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { observeAuth } from './firebase/authentication';
+import { observeAuth, signinAnonymous } from './firebase/authentication';
 import GlobalContext from './context/global';
 import Alert from './components/centralize/Alert';
 import LoadingScreen from './components/centralize/LoadingScreen';
@@ -34,11 +34,18 @@ function App() {
   const [isPageReady, setPageReady] = useState(false);
 
   useMemo(async () => {
+    let isObserveOnInitial = false;
     let unsubUser: Unsubscribe;
     observeAuth(async (user) => {
       if (!user) {
+        if (!isObserveOnInitial) {
+          isObserveOnInitial = true;
+          user = await signinAnonymous();
+        }
         return;
       }
+      isObserveOnInitial = true;
+
       if (unsubUser) {
         unsubUser();
       }

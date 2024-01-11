@@ -3,16 +3,9 @@ import app from "./firebase";
 import { signin } from "../repository/firestore/user";
 
 const auth = getAuth(app);
-let isObserveOnInitial = false;
-onAuthStateChanged(auth, async (user) => {
-    if (!user && !isObserveOnInitial) {
-        await signinAnonymous();
-    }
-    isObserveOnInitial = true;
-});
 
 export async function observeAuth(onObserve: NextOrObserver<User>) {
-    onAuthStateChanged(auth, onObserve);
+    return onAuthStateChanged(auth, onObserve);
 }
 
 export async function signinAnonymous() {
@@ -25,6 +18,7 @@ export async function signinAnonymous() {
         isAnonymous: true,
         isLinkGoogle: false,
     });
+    return user;
 }
 
 export async function createUser(email: string, password: string) {
