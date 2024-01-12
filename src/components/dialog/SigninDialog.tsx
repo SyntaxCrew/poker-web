@@ -191,17 +191,17 @@ export default function SigninDialog(props: {open: boolean, onSubmit?: () => voi
                     })}
                     <Button
                         variant="contained"
-                        className="w-full rounded-md shadow-md"
+                        className="w-full rounded-md shadow-md overflow-hidden"
                         size="large"
                         color="success"
                         disabled={isLoading || email.length === 0 || password.length < 6}
                         onClick={signInWithEmailPassword}
                     >
-                        Login
+                        <div className="text-ellipsis overflow-hidden whitespace-nowrap">Signin</div>
                     </Button>
-                    <div className="flex items-center justify-between">
-                        <Typography className="!font-bold text-blue-500 cursor-pointer w-fit" onClick={onSignup}>Signup</Typography>
-                        <Typography className="!font-bold text-blue-500 cursor-pointer w-fit" onClick={() => switchPage('forgot-password')}>Forgot Password</Typography>
+                    <div className="flex items-center flex-wrap gap-4 justify-between overflow-hidden">
+                        <Typography className="!font-bold text-blue-500 cursor-pointer w-fit text-ellipsis overflow-hidden whitespace-nowrap" onClick={onSignup}>Signup</Typography>
+                        <Typography className="!font-bold text-blue-500 cursor-pointer w-fit text-ellipsis overflow-hidden whitespace-nowrap" onClick={() => switchPage('forgot-password')}>Forgot Password</Typography>
                     </div>
 
                     <Divider />
@@ -213,9 +213,9 @@ export default function SigninDialog(props: {open: boolean, onSubmit?: () => voi
                         disabled={isLoading}
                         sx={{backgroundColor: '#fff', color: '#000', borderColor: 'rgb(229 231 235)', height: '56.69px'}}
                     >
-                        <div className="flex items-center justify-center">
+                        <div className="flex items-center justify-center overflow-hidden">
                             <img src={GoogleIcon} alt="Google Icon" className="w-6 h-6" />
-                            <span className="ml-4">Sign in with Google</span>
+                            <div className="ml-4 w-fit text-ellipsis overflow-hidden whitespace-nowrap">Sign in with Google</div>
                         </div>
                     </Button>
                 </>}
