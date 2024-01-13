@@ -1,6 +1,8 @@
 import { MouseEvent, useCallback, useContext, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { Divider, ListItemIcon, ListItemText, Menu, MenuItem, Switch, Typography } from "@mui/material";
 import { CollectionsBookmark, Logout, Login, PersonAdd, ManageAccounts, Lock, Visibility } from '@mui/icons-material';
+import MyGamesDialog from "../dialog/MyGamesDialog";
 import ProfileDialog from "../dialog/ProfileDialog";
 import ChangePasswordDialog from "../dialog/ChangePasswordDialog";
 import SigninDialog from "../dialog/SigninDialog";
@@ -12,7 +14,6 @@ import { Menu as MenuModel } from "../../models/menu";
 import { UserProfile } from "../../models/user";
 import { joinGame } from "../../repository/firestore/poker";
 import { updateUserProfile } from "../../repository/firestore/user";
-import { useLocation } from "react-router-dom";
 
 export default function UserMenu() {
     const { sessionID, setLoading, alert, profile, poker } = useContext(GlobalContext);
@@ -24,7 +25,7 @@ export default function UserMenu() {
         return paths.length === 2 && paths[1].length > 0;
     }, [location.pathname]);
 
-    type DialogName = 'profile' | 'change-password' | 'signin' | 'signup' | 'signout' | 'close'
+    type DialogName = 'my-games' | 'profile' | 'change-password' | 'signin' | 'signup' | 'signout' | 'close'
 
     const [isOpenMenu, setOpenMenu] = useState(false);
     const [openDialog, setOpenDialog] = useState<DialogName>('close');
@@ -39,9 +40,8 @@ export default function UserMenu() {
         [
             {
                 prefixIcon: <CollectionsBookmark fontSize="small" />,
-                disabled: true,
                 text: 'My Games',
-                hasMenu: () => true,
+                onClick: () => setDialog('my-games'),
             },
             {
                 prefixIcon: <Visibility fontSize="small" />,
@@ -170,6 +170,7 @@ export default function UserMenu() {
                 })}
             </Menu>
 
+            <MyGamesDialog open={openDialog === 'my-games'} profile={profile} onClose={() => setDialog('close')} />
             <ProfileDialog open={openDialog === 'profile'} profile={profile} onSubmit={updateProfile} onClose={() => setDialog('close')} />
             {!profile.isAnonymous && <ChangePasswordDialog open={openDialog === 'change-password'} profile={profile} onSubmit={() => setDialog('close')} onClose={() => setDialog('close')} />}
             {profile.isAnonymous && <SigninDialog open={openDialog === 'signin'} onClose={() => setDialog('close')} onSignup={() => setDialog('signup', true)} isTransition={isTransition} />}

@@ -21,7 +21,11 @@ export default function VotingHistoryDialog(props: {open: boolean, onClose?: () 
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {!props.poker.history ? <TableCell colSpan={columns.length}><div className="text-center">NO DATA</div></TableCell> : Object.values(props.poker.history).sort((a, b) => a.date.toDate().toISOString().localeCompare(b.date.toDate().toISOString())).map((history, index) => {
+                            {!props.poker.history && <TableRow>
+                                <TableCell colSpan={columns.length}><div className="text-center">NO DATA</div></TableCell>
+                            </TableRow>}
+
+                            {props.poker.history && Object.values(props.poker.history).sort((a, b) => a.date.toDate().toISOString().localeCompare(b.date.toDate().toISOString())).map((history, index) => {
                                 return (
                                     <TableRow key={index}>
                                         <TableCell component="th" scope="row">{ history.issueName || '-' }</TableCell>

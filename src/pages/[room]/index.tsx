@@ -6,16 +6,9 @@ import JoinGameDialog from "../../components/dialog/JoinGameDialog";
 import UserCard from "../../components/partials/UserCard";
 import EstimatePointCard from "../../components/shared/EstimatePointCard";
 import { Map } from "../../models/generic";
-import { joinPokerRoom, leavePokerRoom, updateEstimateStatus, pokeCard, checkPokerRoom } from '../../repository/firestore/poker';
+import { leavePokerRoom, updateEstimateStatus, pokeCard, joinPokerRoom, updateActiveSession, newJoiner } from '../../repository/firestore/poker';
 import { updateUserProfile } from "../../repository/firestore/user";
 import { numberFormat } from "../../utils/number";
-
-// Object keys sequence
-// 1. Wait for fetched profile from App.tsx and inject into global context
-// 2. Check is exists room and is user joined to this game or not
-//    a. If this room is not exists (invalid room id), then redirect to home page
-//    b. if user is join this game at the first time then set display name and mode before join the game
-// 3. Set page status to ready, then subscribe poker room with realtime data
 
 export default function PokerRoomPage() {
     const { sessionID, isLoading, setLoading, profile, poker, setPoker, isPageReady } = useContext(GlobalContext);
@@ -25,113 +18,71 @@ export default function PokerRoomPage() {
     const [currentEstimatePoint, setCurrentEstimatePoint] = useState<string>();
 
     // set display name in dialog if user join to the game at first time
-    const [isReady, setReady] = useState(false);
     const [isOpenDialog, setOpenDialog] = useState(false);
-    const [displayName, setDisplayName] = useState('');
-    const [isSpectator, setSpectator] = useState(false);
 
     const [summary, setSummary] = useState<{result: Map<number>, max: number, total: number, average?: number}>({result: {}, max: 0, total: 0, average: 0});
     const [summaryStatus, setSummaryStatus] = useState<'set' | 'unset'>('unset');
 
     useBeforeUnload(async () => await leavePokerRoom(profile.userUUID, sessionID, room!));
+
     useEffect(() => {
         setLoading(true);
-        if (isPageReady) {
-            if (!isReady) {
-                checkExistsRoom();
-            } else {
-                joinPoker();
-            }
-        }
-    }, [isPageReady, isReady])
-
-    async function checkExistsRoom() {
-        const { isExists, isJoined } = await checkPokerRoom(room!, profile.userUUID);
-        if (!isExists) {
-            setLoading(false);
-            navigate('/');
-        }
-        if (!isJoined) {
-            setLoading(false);
-            setOpenDialog(true);
-        } else {
-            setReady(true);
-        }
-    }
-
-    async function joinPoker() {
-        let isFirstTime = true;
-        try {
-            await joinPokerRoom({
-                userUUID: profile.userUUID,
-                sessionUUID: sessionID,
-                roomID: room!,
-                onNotFound: () => navigate('/'),
-                onNewJoiner() {
-                    if (displayName !== profile.displayName) {
-                        updateUserProfile({userUID: profile.userUUID, displayName});
+        if (isPageReady && room) {
+            let isFirstTime = true;
+            return joinPokerRoom(room, async (poker) => {
+                try {
+                    if (!poker) {
+                        throw Error('poker not found');
                     }
-                    return { displayName, imageURL: profile.imageURL, isSpectator };
-                },
-                onNext(poker) {
-                    try {
-                        if (!poker) {
-                            throw Error('poker not found');
-                        }
-                        setPoker(poker);
+                    setPoker(poker);
 
-                        // set timer countdown
-                        if (poker.option.autoRevealCards) {
-                            let isVoteAll = true;
-                            let hasUser = false;
-                            for (const user of Object.values(poker.user)) {
-                                if (user.isSpectator) {
-                                    continue;
-                                }
-                                if (user.activeSessions?.length > 0) {
-                                    hasUser = true;
-                                    if (user.estimatePoint == null) {
-                                        isVoteAll = false;
-                                        break;
-                                    }
+                    if (!poker.user[profile.userUUID]) {
+                        setOpenDialog(true);
+                        return;
+                    } else if (isFirstTime) {
+                        isFirstTime = false;
+                        await updateActiveSession(profile.userUUID, sessionID, room, 'join');
+                        setLoading(false);
+                    }
+
+                    // set timer countdown
+                    if (poker.option.autoRevealCards) {
+                        let isVoteAll = true;
+                        let hasUser = false;
+                        for (const user of Object.values(poker.user)) {
+                            if (user.isSpectator) {
+                                continue;
+                            }
+                            if (user.activeSessions?.length > 0) {
+                                hasUser = true;
+                                if (user.estimatePoint == null) {
+                                    isVoteAll = false;
+                                    break;
                                 }
                             }
-
-                            // update multiple times depend on active users
-                            if (hasUser && isVoteAll && poker.estimateStatus === 'CLOSED') {
-                                updateEstimateStatus(room!, 'OPENING');
-                            }
                         }
 
-                    } catch (error) {
-                        navigate('/');
-                    } finally {
-                        if (isFirstTime) {
-                            setLoading(false);
-                            isFirstTime = false;
+                        // update multiple times depend on active users
+                        if (hasUser && isVoteAll && poker.estimateStatus === 'CLOSED') {
+                            updateEstimateStatus(room!, 'OPENING');
                         }
                     }
-                },
-            });
 
-        } catch (error) {
-            if (isFirstTime) {
-                setLoading(false);
-                isFirstTime = false;
-            }
-            navigate('/');
+                } catch (error) {
+                    navigate('/');
+                } finally {
+                    if (isFirstTime) {
+                        setLoading(false);
+                        isFirstTime = false;
+                    }
+                }
+            })
         }
-    }
+    }, [isPageReady, room]);
 
     useEffect(() => {
-        if (!poker || !profile) {
-            return;
-        }
-        for (const userUUID of Object.keys(poker.user)) {
-            if (profile.userUUID === userUUID) {
-                setCurrentEstimatePoint(poker.user[userUUID].estimatePoint);
-                break;
-            }
+        if (poker && profile && poker.user[profile.userUUID]) {
+            setCurrentEstimatePoint(poker.user[profile.userUUID].estimatePoint);
         }
     }, [profile, poker])
 
@@ -176,36 +127,38 @@ export default function PokerRoomPage() {
         <>
             <JoinGameDialog
                 open={isOpenDialog}
-                onSubmit={(displayName, isSpectator) => {
-                    setDisplayName(displayName);
-                    setSpectator(isSpectator);
+                onSubmit={async (displayName, isSpectator) => {
+                    if (profile.displayName !== displayName) {
+                        updateUserProfile({userUID: profile.userUUID, displayName});
+                    }
+                    setLoading(true);
+                    await newJoiner(profile.userUUID, room!, displayName, profile.imageURL, isSpectator, sessionID);
                     setOpenDialog(false);
-                    setReady(true);
+                    setLoading(false);
                 }}
             />
 
             {!isLoading && poker && (
                 <div className="px-4 flex gap-4 flex-wrap w-full h-full justify-center items-center m-auto min-h-[calc(100vh-5rem)] pb-32 pt-4">
-                    {
-                        Object.
-                            keys(poker.user).
-                            filter(userUUID => poker.user[userUUID].displayName && !poker.user[userUUID].isSpectator && ((poker.user[userUUID].estimatePoint != null && poker.estimateStatus !== 'CLOSED') || poker.user[userUUID].activeSessions?.length)).
-                            sort((a, b) => (!poker.user[a].displayName || !poker.user[b].displayName || poker.user[a].displayName === poker.user[b].displayName) ? a.localeCompare(b) : poker.user[a].displayName.localeCompare(poker.user[b].displayName)).
-                            map(userUUID => {
-                                return (
-                                    <UserCard
-                                        key={userUUID}
-                                        roomID={room!}
-                                        userUUID={userUUID}
-                                        imageURL={poker.user[userUUID].imageURL}
-                                        displayName={poker.user[userUUID].displayName}
-                                        isYou={userUUID === profile.userUUID}
-                                        isShowEstimates={poker.estimateStatus === 'OPENED'}
-                                        estimatePoint={poker.user[userUUID].estimatePoint}
-                                        allowOthersToDeleteEstimates={poker.estimateStatus !== 'OPENING' && (poker.user[profile.userUUID]?.isFacilitator || poker.option.allowOthersToDeleteEstimates) && userUUID !== profile.userUUID}
-                                    />
-                                )
-                            })
+                    {Object.
+                        keys(poker.user).
+                        filter(userUUID => poker.user[userUUID].displayName && !poker.user[userUUID].isSpectator && ((poker.user[userUUID].estimatePoint != null && poker.estimateStatus !== 'CLOSED') || poker.user[userUUID].activeSessions?.length)).
+                        sort((a, b) => (!poker.user[a].displayName || !poker.user[b].displayName || poker.user[a].displayName === poker.user[b].displayName) ? a.localeCompare(b) : poker.user[a].displayName.localeCompare(poker.user[b].displayName)).
+                        map(userUUID => {
+                            return (
+                                <UserCard
+                                    key={userUUID}
+                                    roomID={room!}
+                                    userUUID={userUUID}
+                                    imageURL={poker.user[userUUID].imageURL}
+                                    displayName={poker.user[userUUID].displayName}
+                                    isYou={userUUID === profile.userUUID}
+                                    isShowEstimates={poker.estimateStatus === 'OPENED'}
+                                    estimatePoint={poker.user[userUUID].estimatePoint}
+                                    allowOthersToDeleteEstimates={poker.estimateStatus !== 'OPENING' && (poker.user[profile.userUUID]?.isFacilitator || poker.option.allowOthersToDeleteEstimates) && userUUID !== profile.userUUID}
+                                />
+                            )
+                        })
                     }
                 </div>
             )}

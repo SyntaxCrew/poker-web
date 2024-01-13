@@ -67,3 +67,18 @@ export interface UpdatePokerOptionDialog {
     newFacilitatorUUID: string
     option: PokerOption
 }
+
+export interface MyPokerGame {
+    roomID: string
+    roomName: string
+    user: {
+        voter: number
+        total: number
+    }
+    facilitator: {
+        userUID: string
+        displayName: string
+    }
+    createdAt: Date
+    updatedAt?: Date
+}

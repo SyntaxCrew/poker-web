@@ -25,10 +25,15 @@ export default function SpectatorListDialog(props: {open: boolean, onClose?: () 
             aria-labelledby="draggable-dialog-title"
             maxWidth="xs"
             fullWidth
+            PaperProps={{ style: {
+                minHeight: '90%',
+                maxHeight: '90%',
+            }}}
+            onClose={props.onClose}
         >
             <HeaderDialog title={`Spectator List (${spectators.length})`} onClose={props.onClose} />
             <DialogContent>
-                <div className="flex flex-col gap-4 min-h-[75vh]">
+                <div className="flex flex-col gap-4">
                     {spectators.sort((a, b) => (!props.poker.user[a].displayName || !props.poker.user[b].displayName || props.poker.user[a].displayName === props.poker.user[b].displayName) ? a.localeCompare(b) : props.poker.user[a].displayName.localeCompare(props.poker.user[b].displayName)).map(userUUID => {
                         return (
                             <div className="flex gap-2 items-center overflow-hidden w-full" key={userUUID}>
