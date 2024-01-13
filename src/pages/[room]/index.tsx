@@ -35,14 +35,14 @@ export default function PokerRoomPage() {
                         throw Error('poker not found');
                     }
                     setPoker(poker);
-
-                    if (!poker.user[profile.userUUID]) {
-                        setOpenDialog(true);
-                        return;
-                    } else if (isFirstTime) {
+                    if (isFirstTime) {
                         isFirstTime = false;
-                        await updateActiveSession(profile.userUUID, sessionID, room, 'join');
                         setLoading(false);
+                        if (!poker.user[profile.userUUID]) {
+                            setOpenDialog(true);
+                            return;
+                        }
+                        await updateActiveSession(profile.userUUID, sessionID, room, 'join');
                     }
 
                     // set timer countdown
@@ -72,8 +72,8 @@ export default function PokerRoomPage() {
                     navigate('/');
                 } finally {
                     if (isFirstTime) {
-                        setLoading(false);
                         isFirstTime = false;
+                        setLoading(false);
                     }
                 }
             })

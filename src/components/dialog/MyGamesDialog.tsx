@@ -94,6 +94,7 @@ export default function MyGamesDialog(props: {open: boolean, onClose?: () => voi
         setLoading(true);
         try {
             await deleteRoom(userUID, roomID);
+            alert({message: 'Delete room successfully', severity: 'success'});
         } catch (error) {
             alert({message: 'Delete room failed, please try again!', severity: 'error'});
         }
