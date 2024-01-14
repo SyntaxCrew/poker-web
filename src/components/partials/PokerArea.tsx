@@ -91,7 +91,9 @@ export default function PokerArea(props: {roomID: string, poker: Poker, profile:
             const baseTableWidth = 24;
             const baseTableHeight = 10;
             const baseWidth = type === 'table' ? baseTableWidth : baseTableWidth + baseCardArea;
-            if (voterNumber <= 8) {
+            if (voterNumber <= 6 && type === 'screen') {
+                return { width: `${baseTableWidth + padding * 2}rem`, height: `${baseTableHeight}rem` }
+            } else if (voterNumber <= 8) {
                 return { width: `${baseWidth}rem`, height: `${baseTableHeight}rem` }
             }
             const objectWidth = Math.ceil((voterNumber-8)/2) * 7 + baseWidth;
@@ -101,7 +103,7 @@ export default function PokerArea(props: {roomID: string, poker: Poker, profile:
         const baseTableWidth = (baseCardWidth * 2) + (padding * 3);
         const baseWidth = type === 'table' ? baseTableWidth : baseTableWidth + baseCardArea;
         if (voterNumber <= 4) {
-            return { width: `${baseWidth}rem`, height: '10rem' }
+            return { width: type === 'screen' ? `${baseTableWidth + padding * 2}rem` : `${baseWidth}rem`, height: '10rem' }
         }
         const cardNumber = Math.ceil((voterNumber-4)/2);
         const objectHeight = cardNumber * baseCardHeight + (cardNumber + 1);
