@@ -38,6 +38,7 @@ export function joinPokerRoom(roomID: string, onNext: ((data?: Poker) => void)) 
 
 export async function createPokerRoom(userUUID: string, displayName: string, imageURL: string | undefined, roomName: string, isSpectator: boolean, option: PokerOption): Promise<string> {
     const roomID = randomString(20);
+    const now = Timestamp.fromDate(new Date());
     const poker: Poker = {
         roomID,
         roomName,
@@ -50,10 +51,11 @@ export async function createPokerRoom(userUUID: string, displayName: string, ima
                 isFacilitator: true,
                 activeSessions: [],
                 isSpectator,
+                joinedAt: now,
             }
         },
         option,
-        createdAt: Timestamp.fromDate(new Date()),
+        createdAt: now,
     }
 
     await setDoc(pokerDoc(roomID), poker);
@@ -169,52 +171,49 @@ export async function updateEstimateStatus(roomID: string, estimateStatus: Estim
         estimateStatus,
         updatedAt: now,
     };
-    if (['CLOSED', 'OPENED'].includes(estimateStatus)) {
-        const docSnap = await getDoc(pokerDoc(roomID));
-        const poker = docSnap.data();
-        if (poker) {
-            // prevent update concurrent by other users
-            if (estimateStatus === poker.estimateStatus) {
-                return;
-            }
-
-            const userData: Map<null | FieldValue | Timestamp | PokerHistory | string> = {};
-            if (estimateStatus === 'CLOSED') {
-                userData.issueName = deleteField();
-                userData.votingAt = now;
-                for (const userUUID of Object.keys(poker.user)) {
-                    userData[`user.${userUUID}.estimatePoint`] = null;
-                    userData.session = randomString(20);
-                }
-
-            } else if (estimateStatus === 'OPENED') {
-                const pokerHistory: PokerHistory = {
-                    issueName: poker.issueName,
-                    date: now,
-                    total: 0,
-                    voted: 0,
-                    playerResult: [],
-                    result: getSummaryEstimateResult(poker), // average or median or mode
-                }
-                if (poker.votingAt) {
-                    pokerHistory.duration = timeDiffString(poker.votingAt.toDate(), now.toDate())
-                }
-                for (const userUUID of Object.keys(poker.user)) {
-                    if (!poker.user[userUUID].isSpectator && (poker.user[userUUID].activeSessions?.length > 0 || poker.user[userUUID].estimatePoint != null)) {
-                        pokerHistory.total++;
-                    }
-                    if (poker.user[userUUID].estimatePoint != null) {
-                        pokerHistory.voted++;
-                        pokerHistory.playerResult.push({
-                            displayName: poker.user[userUUID].displayName,
-                            estimatePoint: poker.user[userUUID].estimatePoint!,
-                        })
-                    }
-                }
-                userData[`history.${poker.session}`] = pokerHistory;
-            }
-            data = {...data, ...userData};
+    const docSnap = await getDoc(pokerDoc(roomID));
+    const poker = docSnap.data();
+    if (poker) {
+        if (estimateStatus === poker.estimateStatus) {
+            return;
         }
+
+        const userData: Map<null | FieldValue | Timestamp | PokerHistory | string> = {};
+        if (estimateStatus === 'CLOSED') {
+            userData.issueName = deleteField();
+            userData.votingAt = now;
+            for (const userUUID of Object.keys(poker.user)) {
+                userData[`user.${userUUID}.estimatePoint`] = null;
+                userData.session = randomString(20);
+            }
+
+        } else if (estimateStatus === 'OPENED') {
+            const pokerHistory: PokerHistory = {
+                issueName: poker.issueName,
+                date: now,
+                total: 0,
+                voted: 0,
+                playerResult: [],
+                result: getSummaryEstimateResult(poker),
+            }
+            if (poker.votingAt) {
+                pokerHistory.duration = timeDiffString(poker.votingAt.toDate(), now.toDate())
+            }
+            for (const userUUID of Object.keys(poker.user)) {
+                if (!poker.user[userUUID].isSpectator && (poker.user[userUUID].activeSessions?.length > 0 || poker.user[userUUID].estimatePoint != null)) {
+                    pokerHistory.total++;
+                }
+                if (poker.user[userUUID].estimatePoint != null) {
+                    pokerHistory.voted++;
+                    pokerHistory.playerResult.push({
+                        displayName: poker.user[userUUID].displayName,
+                        estimatePoint: poker.user[userUUID].estimatePoint!,
+                    })
+                }
+            }
+            userData[`history.${poker.session}`] = pokerHistory;
+        }
+        data = {...data, ...userData};
     }
     return await updateDoc(pokerDoc(roomID), data);
 }
@@ -260,6 +259,7 @@ export async function replaceUser(fromUserUID: string, toUserUID: string, sessio
                 [`user.${toUserUID}.isSpectator`]: !(isOldUserActive || isNewUserActive),
                 [`user.${toUserUID}.isFacilitator`]: data.user[toUserUID]?.isFacilitator || data.user[fromUserUID].isFacilitator,
                 [`user.${toUserUID}.activeSessions`]: arrayUnion(sessionUUID),
+                [`user.${toUserUID}.joinedAt`]: data.user[fromUserUID]?.joinedAt || now,
                 [`user.${fromUserUID}`]: deleteField(),
                 updatedAt: now,
             })
@@ -319,6 +319,13 @@ export async function deleteRoom(userUID: string, roomID: string) {
     await deleteDoc(pokerDoc(roomID));
 }
 
+export async function updateIssueName(roomID: string, issueName?: string) {
+    await updateDoc(pokerDoc(roomID), {
+        issueName: issueName ?? '',
+        updatedAt: Timestamp.fromDate(new Date()),
+    });
+}
+
 export async function updateActiveSession(userUUID: string, sessionUUID: string, roomID: string, event: 'join' | 'leave') {
     await updateDoc(pokerDoc(roomID), {
         [`user.${userUUID}.activeSessions`]: event === 'join' ? arrayUnion(sessionUUID) : arrayRemove(sessionUUID),
@@ -327,12 +334,14 @@ export async function updateActiveSession(userUUID: string, sessionUUID: string,
 }
 
 export async function newJoiner(userUUID: string, roomID: string, displayName: string, imageURL: string | undefined, isSpectator: boolean, sessionUUID: string) {
+    const now = Timestamp.fromDate(new Date())
     await updateDoc(pokerDoc(roomID), {
         [`user.${userUUID}.displayName`]: displayName,
         [`user.${userUUID}.imageURL`]: imageURL,
         [`user.${userUUID}.isSpectator`]: isSpectator,
         [`user.${userUUID}.activeSessions`]: arrayUnion(sessionUUID),
-        updatedAt: Timestamp.fromDate(new Date()),
+        [`user.${userUUID}.joinedAt`]: now,
+        updatedAt: now,
     });
 }
 

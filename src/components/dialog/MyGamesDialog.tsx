@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button, Dialog, DialogActions, DialogContent, Divider, Tab, Tabs } from "@mui/material";
 import ConfirmDialog from "./ConfirmDialog";
 import HeaderDialog from "./HeaderDialog";
-import SortingTable from "../partials/SortingTable";
+import SortingTable from "../shared/SortingTable";
 import GlobalContext from "../../context/global";
 import { MyPokerGame } from "../../models/poker";
 import { UserProfile } from "../../models/user";

@@ -1,7 +1,7 @@
 import { MouseEvent, useCallback, useContext, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { Divider, ListItemIcon, ListItemText, Menu, MenuItem, Switch, Typography } from "@mui/material";
-import { CollectionsBookmark, Logout, Login, PersonAdd, ManageAccounts, Lock, Visibility } from '@mui/icons-material';
+import { CollectionsBookmark, Logout, Login, PersonAdd, ManageAccounts, Lock, Visibility, Image } from '@mui/icons-material';
 import MyGamesDialog from "../dialog/MyGamesDialog";
 import ProfileDialog from "../dialog/ProfileDialog";
 import ChangePasswordDialog from "../dialog/ChangePasswordDialog";
@@ -16,7 +16,7 @@ import { joinGame } from "../../repository/firestore/poker";
 import { updateUserProfile } from "../../repository/firestore/user";
 
 export default function UserMenu() {
-    const { sessionID, setLoading, alert, profile, poker } = useContext(GlobalContext);
+    const { sessionID, setLoading, alert, profile, poker, setting, setSetting } = useContext(GlobalContext);
 
     const location = useLocation();
 
@@ -52,6 +52,16 @@ export default function UserMenu() {
                     size="small"
                     checked={poker?.user[profile.userUUID]?.isSpectator ?? true}
                     onChange={spectatorToggle}
+                />,
+            },
+            {
+                prefixIcon: <Image fontSize="small" />,
+                text: 'Display User Image',
+                onClick: () => setSetting({...setting, displayUserImage: setting.displayUserImage === 'show' ? 'hide' : 'show'}),
+                suffix: <Switch
+                    size="small"
+                    checked={setting.displayUserImage === 'show'}
+                    onChange={() => setSetting({...setting, displayUserImage: setting.displayUserImage === 'show' ? 'hide' : 'show'})}
                 />,
             },
             {

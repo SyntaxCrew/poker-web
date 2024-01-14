@@ -36,7 +36,6 @@ export default function CreatePokerRoomDialog(props: {isOpen: boolean, onSubmit:
             decks: [...defaultDecks],
             activeDeckID: defaultDecks[0].deckID,
         },
-        autoRevealCards: false,
         allowOthersToShowEstimates: true,
         allowOthersToClearUsers: false,
         allowOthersToDeleteEstimates: false,
@@ -86,12 +85,6 @@ export default function CreatePokerRoomDialog(props: {isOpen: boolean, onSubmit:
             description: 'Join the game as a spectator with no ability to vote.',
             value: isSpectator,
             setValue: (_: ChangeEvent<HTMLInputElement>, checked: boolean) => setSpectator(checked),
-        },
-        {
-            title: 'Auto-reveal cards',
-            description: 'Show cards automatically after everyone voted.',
-            value: pokerOption.autoRevealCards,
-            setValue: (_: ChangeEvent<HTMLInputElement>, checked: boolean) => setPokerOption({...pokerOption, autoRevealCards: checked}),
         },
         {
             title: 'Allow others to show estimates',

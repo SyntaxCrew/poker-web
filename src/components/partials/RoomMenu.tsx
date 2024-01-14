@@ -1,4 +1,4 @@
-import { MouseEvent, useCallback, useContext, useEffect, useState } from "react";
+import { MouseEvent, useCallback, useContext, useState } from "react";
 import { Button, Divider, ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
 import { ExpandMore, GroupRemove, Restore, Settings, Share, Visibility } from "@mui/icons-material";
 import { useLocation } from "react-router-dom";
@@ -7,12 +7,13 @@ import SpectatorListDialog from "../dialog/SpectatorListDialog";
 import SharedLinkDialog from "../dialog/ShareLinkDialog";
 import VotingHistoryDialog from "../dialog/VotingHistoryDialog";
 import GlobalContext from "../../context/global";
+import { displayButton, flipCard, isUsersExists } from "../../composables/poker";
 import { Menu as MenuModel } from "../../models/menu";
-import { EstimateStatus, UpdatePokerOptionDialog } from "../../models/poker";
-import { clearUsers, updateEstimateStatus, updatePokerOption } from "../../repository/firestore/poker";
+import { UpdatePokerOptionDialog } from "../../models/poker";
+import { clearUsers, updatePokerOption } from "../../repository/firestore/poker";
 
 export default function RoomMenu() {
-    const { poker, profile, setLoading, alert } = useContext(GlobalContext);
+    const { poker, profile, setLoading, alert, isDisplayVoteButtonOnTopbar } = useContext(GlobalContext);
 
     const location = useLocation();
 
@@ -27,50 +28,9 @@ export default function RoomMenu() {
     const [isOpenMenu, setOpenMenu] = useState(false);
     const [openDialog, setOpenDialog] = useState<Dialog>('close');
 
-    const [countdown, setCountdown] = useState(0);
-    const [isCountingDown, setCountingDown] = useState(false);
-
-    useEffect(() => {
-        if (poker?.estimateStatus === 'OPENING' && !isCountingDown) {
-            setCountdown(2);
-            setCountingDown(true);
-        } else if (poker?.estimateStatus === 'OPENED' && isCountingDown) {
-            setCountdown(0);
-            setCountingDown(false);
-        }
-    }, [isCountingDown, poker])
-
-    // Countdown for reveal cards
-    useEffect(() => {
-        const timer = countdown > 0 && setInterval(() => {
-            setCountdown(countdown - 1);
-        }, 1000);
-        if (typeof timer == "number") {
-            return () => clearInterval(timer);
-        }
-
-        // maybe update multiple times if this room has many users
-        if (poker && poker.estimateStatus !== 'OPENED') {
-            updateEstimateStatus(poker.roomID, 'OPENED');
-        }
-    }, [countdown]);
-
     if (!poker || !isPokerPath()) {
         return (<></>);
     }
-
-    const isUsersExists = (isPoked?: boolean) => {
-        if (!poker) {
-            return false;
-        }
-        for (const pokerUser of Object.values(poker.user)) {
-            if (!pokerUser.isSpectator && pokerUser.activeSessions?.length > 0 && (!isPoked || pokerUser.estimatePoint != null)) {
-                return true;
-            }
-        }
-        return false;
-    }
-    const displayButton = (isAllowOption: boolean) => isUsersExists() && poker && (poker.user[profile.userUUID]?.isFacilitator || (isAllowOption && !poker.user[profile.userUUID]?.isSpectator && poker.user[profile.userUUID]?.activeSessions?.length > 0))
 
     const toggle = (event: MouseEvent<HTMLDivElement>) => {
         setAnchorEl(event.currentTarget);
@@ -92,33 +52,13 @@ export default function RoomMenu() {
         setLoading(false);
     }
 
-    const flipCard = async() => {
-        if (!poker) {
-            return;
-        }
-
-        let estimateStatus!: EstimateStatus;
-        switch (poker.estimateStatus) {
-            case 'CLOSED':
-                estimateStatus = 'OPENING';
-                break;
-            case 'OPENING':
-                estimateStatus = 'OPENED';
-                break;
-            case 'OPENED':
-                estimateStatus = 'CLOSED';
-                break;
-        }
-        await updateEstimateStatus(poker.roomID, estimateStatus);
-    }
-
     const menu: MenuModel[][] = [
         [
             {
                 prefixIcon: <GroupRemove fontSize="small" />,
                 text: 'Clear Users',
-                onClick: () => poker && !!poker.roomID && displayButton(poker.option.allowOthersToClearUsers) && clearUsers(poker.roomID),
-                disabled: poker?.estimateStatus === 'OPENING' || !displayButton(poker.option.allowOthersToClearUsers),
+                onClick: () => poker && !!poker.roomID && displayButton(poker, profile, poker.option.allowOthersToClearUsers) && clearUsers(poker.roomID),
+                disabled: !displayButton(poker, profile, poker.option.allowOthersToClearUsers),
             },
             {
                 prefixIcon: <Visibility fontSize="small" />,
@@ -196,17 +136,17 @@ export default function RoomMenu() {
                 })}
             </Menu>
 
-            <div className="flex items-center gap-4 ml-auto">
+            {isDisplayVoteButtonOnTopbar && <div className="flex items-center gap-4 ml-auto">
                 <Button
                     variant="contained"
                     color="success"
                     className="whitespace-nowrap"
-                    onClick={flipCard}
-                    disabled={(poker.estimateStatus === 'CLOSED' && !isUsersExists(true)) || !displayButton(poker.option.allowOthersToShowEstimates)}
+                    onClick={() => flipCard(poker)}
+                    disabled={(poker.estimateStatus === 'CLOSED' && !isUsersExists(poker, true)) || !displayButton(poker, profile, poker.option.allowOthersToShowEstimates)}
                 >
-                    { poker.estimateStatus === 'OPENED' ? 'Vote Next Issue' : poker.estimateStatus === 'OPENING' ? `Show in ${countdown}s` : 'Show Cards' }
+                    { poker.estimateStatus === 'OPENED' ? 'Vote Next Issue' : 'Show Cards' }
                 </Button>
-            </div>
+            </div>}
 
             <SharedLinkDialog open={openDialog === 'shared'} onClose={() => setOpenDialog('close')} roomID={poker.roomID} />
             <SpectatorListDialog open={openDialog === 'spectators'} onClose={() => setOpenDialog('close')} poker={poker} profile={profile} />

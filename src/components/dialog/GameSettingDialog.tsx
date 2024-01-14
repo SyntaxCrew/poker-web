@@ -120,14 +120,6 @@ export default function GameSettingDialog(props: {open: boolean, onSubmit?: (dat
         },
         {
             type: 'switch',
-            title: 'Auto-reveal cards',
-            description: 'Show cards automatically after everyone voted.',
-            value: pokerOption.autoRevealCards,
-            disabled: !props.poker.user[props.profile.userUUID]?.isFacilitator,
-            setValue: (_: ChangeEvent<HTMLInputElement>, checked: boolean) => setPokerOption({...pokerOption, autoRevealCards: checked}),
-        },
-        {
-            type: 'switch',
             title: 'Allow others to show estimates',
             description: 'Allowed all players to flip cards and show results.',
             value: pokerOption.allowOthersToShowEstimates,

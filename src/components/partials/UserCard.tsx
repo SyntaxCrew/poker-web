@@ -1,8 +1,11 @@
 import { Tooltip } from "@mui/material";
 import Avatar from "../shared/Avatar";
 import { clearUsers } from "../../repository/firestore/poker";
+import { useContext } from "react";
+import GlobalContext from "../../context/global";
 
 export default function UserCard(props: {roomID: string, isYou: boolean, userUUID: string, displayName: string, imageURL?: string, estimatePoint?: string, isShowEstimates: boolean, allowOthersToDeleteEstimates: boolean}) {
+    const { setting } = useContext(GlobalContext);
     return (
         <div className="flex flex-col items-center max-w-28 w-full overflow-hidden">
             <div className={"min-w-12 h-20 rounded-md relative flex items-center ease-in duration-200 preserve-3d group " + (props.estimatePoint == null ? 'bg-gray-200' : props.isShowEstimates ? 'rotate-y-180 bg-gray-200 text-blue-600' : 'bg-blue-600')}>
@@ -13,7 +16,7 @@ export default function UserCard(props: {roomID: string, isYou: boolean, userUUI
                     </svg>
                 </div>}
             </div>
-            <Avatar profile={{userUUID: props.userUUID, imageURL: props.imageURL, displayName: props.displayName, isAnonymous: false}} />
+            {setting.displayUserImage === 'show' && <Avatar profile={{userUUID: props.userUUID, imageURL: props.imageURL, displayName: props.displayName, isAnonymous: false}} />}
             <Tooltip
                 title={props.displayName}
                 arrow
