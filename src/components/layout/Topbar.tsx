@@ -1,8 +1,8 @@
 import { useLayoutEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import PokerLogo from '/images/poker.png';
-import RoomMenu from '../partials/RoomMenu';
-import UserMenu from '../partials/UserMenu';
+import RoomMenu from '../menu/RoomMenu';
+import UserMenu from '../menu/UserMenu';
 
 export default function Topbar() {
     const [scrollY, setScrollY] = useState(0);

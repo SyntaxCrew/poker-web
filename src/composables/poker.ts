@@ -23,3 +23,22 @@ export async function flipCard(poker: Poker) {
         await updateEstimateStatus(poker.roomID, poker.estimateStatus === 'CLOSED' ? 'OPENED' : 'CLOSED');
     }
 }
+
+export function isVoteAll(poker: Poker) {
+    let isVoteAll = true;
+    let hasUser = false;
+    for (const user of Object.values(poker.user)) {
+        if (user.isSpectator) {
+            continue;
+        }
+        if (user.activeSessions?.length > 0) {
+            hasUser = true;
+            if (user.estimatePoint == null) {
+                isVoteAll = false;
+                break;
+            }
+        }
+    }
+
+    return hasUser && isVoteAll && poker.estimateStatus === 'CLOSED';
+}

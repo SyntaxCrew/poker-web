@@ -1,13 +1,14 @@
 import { MouseEvent, useCallback, useContext, useState } from "react";
-import { Button, Divider, ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
+import { Divider, ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
 import { ExpandMore, GroupRemove, Restore, Settings, Share, Visibility } from "@mui/icons-material";
 import { useLocation } from "react-router-dom";
 import GameSettingDialog from "../dialog/GameSettingDialog";
 import SpectatorListDialog from "../dialog/SpectatorListDialog";
 import SharedLinkDialog from "../dialog/ShareLinkDialog";
 import VotingHistoryDialog from "../dialog/VotingHistoryDialog";
+import PokerButton from "../poker/PokerButton";
 import GlobalContext from "../../context/global";
-import { displayButton, flipCard, isUsersExists } from "../../composables/poker";
+import { displayButton } from "../../composables/poker";
 import { Menu as MenuModel } from "../../models/menu";
 import { UpdatePokerOptionDialog } from "../../models/poker";
 import { clearUsers, updatePokerOption } from "../../repository/firestore/poker";
@@ -137,15 +138,7 @@ export default function RoomMenu() {
             </Menu>
 
             {isDisplayVoteButtonOnTopbar && <div className="flex items-center gap-4 ml-auto">
-                <Button
-                    variant="contained"
-                    color="success"
-                    className="whitespace-nowrap"
-                    onClick={() => flipCard(poker)}
-                    disabled={(poker.estimateStatus === 'CLOSED' && !isUsersExists(poker, true)) || !displayButton(poker, profile, poker.option.allowOthersToShowEstimates)}
-                >
-                    { poker.estimateStatus === 'OPENED' ? 'Vote Next Issue' : 'Show Cards' }
-                </Button>
+                <PokerButton profile={profile} poker={poker} />
             </div>}
 
             <SharedLinkDialog open={openDialog === 'shared'} onClose={() => setOpenDialog('close')} roomID={poker.roomID} />

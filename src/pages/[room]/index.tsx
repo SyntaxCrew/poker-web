@@ -4,8 +4,8 @@ import GlobalContext from "../../context/global";
 import JoinGameDialog from "../../components/dialog/JoinGameDialog";
 import { leavePokerRoom, joinPokerRoom, updateActiveSession, newJoiner } from '../../repository/firestore/poker';
 import { updateUserProfile } from "../../repository/firestore/user";
-import PokerPanel from "../../components/partials/PokerPanel";
-import PokerArea from "../../components/partials/PokerArea";
+import PokerPanel from "../../components/poker/PokerPanel";
+import PokerArea from "../../components/poker/PokerArea";
 
 export default function PokerRoomPage() {
     const { sessionID, setLoading, profile, poker, setPoker, isPageReady, alert } = useContext(GlobalContext);

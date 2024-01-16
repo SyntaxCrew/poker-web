@@ -81,6 +81,15 @@
   backface-visibility: hidden;
 }
 
+@keyframes linearGradientFlow {
+  0% {
+    background-position: 0%;
+  }
+  100% {
+    background-position: 200%;
+  }
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
