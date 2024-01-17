@@ -2,6 +2,7 @@ import { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, TextField, Card, Box, CircularProgress, Divider } from '@mui/material';
 import ScrumPokerImg from '/images/estimation.png';
+import PokerLogo from '/images/poker-horizontal.png';
 import GlobalContext from '../context/global';
 import CreatePokerRoomDialog from '../components/dialog/CreatePokerRoomDialog';
 import { CreatePokerOptionDialog } from '../models/poker';
@@ -54,12 +55,13 @@ export default function HomePage() {
         <>
             <div className="p-4 flex gap-4 w-full h-full justify-center items-center m-auto min-h-[calc(100vh-5rem)]">
                 <div className="w-full bg-white px-6 max-[900px]:hidden" id="home-page-logo">
-                    <img className="m-auto" src={ScrumPokerImg} alt="Scrum Poker" />
+                    <img className="mx-auto -mb-8 z-10 relative w-1/2" src={PokerLogo} alt="Scrum Poker Img" />
+                    <img className="m-auto" src={ScrumPokerImg} alt="Scrum Poker Banner" />
                 </div>
 
                 <div className="w-full bg-white">
                     <Card className="w-96 max-w-full m-auto rounded-md p-4 flex flex-col gap-4 shadow-xl !bg-gray-50" elevation={8}>
-                        <div className="text-center text-3xl font-bold text-ellipsis overflow-hidden whitespace-nowrap">Poker</div>
+                        <div className="text-center text-3xl font-bold text-ellipsis overflow-hidden whitespace-nowrap">Scrum Poker</div>
                         <Divider />
                         <div className="flex gap-4">
                             <TextField

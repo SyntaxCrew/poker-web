@@ -99,7 +99,8 @@ function App() {
             setSetting,
             isDisplayVoteButtonOnTopbar,
             setDisplayVoteButtonOnTopbar,
-          }}>
+          }}
+        >
           <Alert isShowAlert={alert.isShow} message={alert.message} severity={alert.severity} onDismiss={() => setAlert({...alert, isShow: false})} />
           <LoadingScreen isLoading={isLoading} />
           <Topbar />

@@ -1,6 +1,6 @@
 import { useLayoutEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import PokerLogo from '/images/poker.png';
+import PokerLogo from '/images/logo.png';
 import RoomMenu from '../menu/RoomMenu';
 import UserMenu from '../menu/UserMenu';
 
@@ -19,7 +19,9 @@ export default function Topbar() {
                 <div className={"flex items-center justify-between px-2 sm:px-4 gap-4 h-20 bg-white" + (scrollY > 0 ? ' shadow-lg' : '')}>
                     <div className="flex items-center gap-2 w-full overflow-hidden">
                         <Link to='/'>
-                            <img src={PokerLogo} className="min-w-10 min-h-10 max-w-10 max-h-10" alt="Poker logo" />
+                            <div className="rounded-full bg-black">
+                                <img src={PokerLogo} className="min-w-10 min-h-10 max-w-10 max-h-10" alt="Poker logo" />
+                            </div>
                         </Link>
                         <RoomMenu />
                     </div>

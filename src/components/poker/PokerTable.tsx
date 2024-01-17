@@ -14,7 +14,7 @@ export default function PokeTable(props: {roomID: string, poker: Poker, profile:
 
     const [style, setStyle] = useState<CSSProperties>(props.style || {});
     const [gradientBorder] = useState<CSSProperties>({
-        background: 'linear-gradient(to right, #00dbde 0%, green 50%, #00dbde 100%)',
+        background: 'linear-gradient(60deg, #f79533, #f37055, #ef4e7b, #a166ab, #5073b8, #1098ad, #07b39b, #6fba82)',
         backgroundSize: '200%',
         animation: 'linearGradientFlow 5s infinite linear',
     })
