@@ -12,6 +12,7 @@ import { Alert as AlertModel } from './models/alert';
 import { Poker } from './models/poker';
 import { Setting } from './models/setting';
 import { UserProfile } from './models/user';
+import { leavePokerRoom } from './repository/firestore/poker';
 import { watchUser } from './repository/firestore/user';
 import Router from "./router/router";
 import { randomString } from './utils/generator';
@@ -36,6 +37,8 @@ function App() {
   const [setting, setSetting] = useState<Setting>({displayUserImage: (localStorage.getItem(LocalStorageKey.DisplayUserImageSetting) as ('show' | 'hide')) || 'hide'});
   const [isPageReady, setPageReady] = useState(false);
   const [isDisplayVoteButtonOnTopbar, setDisplayVoteButtonOnTopbar] = useState(false);
+
+  const [previousRoomID, setPreviousRoomID] = useState('');
 
   useMemo(async () => {
     let isObserveOnInitial = false;
@@ -71,6 +74,13 @@ function App() {
       setPoker(undefined);
     }
   }, [location.pathname])
+
+  useEffect(() => {
+    if (previousRoomID && previousRoomID !== (poker?.roomID ?? '')) {
+      leavePokerRoom(profile.userUUID, sessionID, previousRoomID)
+    }
+    setPreviousRoomID(poker?.roomID ?? '');
+  }, [poker])
 
   return (
     <>

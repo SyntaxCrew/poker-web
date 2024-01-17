@@ -2,10 +2,10 @@ import { useContext, useEffect, useState } from "react";
 import { useBeforeUnload, useNavigate, useParams } from "react-router-dom";
 import GlobalContext from "../../context/global";
 import JoinGameDialog from "../../components/dialog/JoinGameDialog";
-import { leavePokerRoom, joinPokerRoom, updateActiveSession, newJoiner } from '../../repository/firestore/poker';
-import { updateUserProfile } from "../../repository/firestore/user";
 import PokerPanel from "../../components/poker/PokerPanel";
 import PokerArea from "../../components/poker/PokerArea";
+import { leavePokerRoom, joinPokerRoom, updateActiveSession, newJoiner } from '../../repository/firestore/poker';
+import { updateUserProfile } from "../../repository/firestore/user";
 
 export default function PokerRoomPage() {
     const { sessionID, setLoading, profile, poker, setPoker, isPageReady, alert } = useContext(GlobalContext);
