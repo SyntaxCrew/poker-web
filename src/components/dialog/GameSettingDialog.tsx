@@ -144,6 +144,14 @@ export default function GameSettingDialog(props: {open: boolean, onSubmit?: (dat
         },
         {
             type: 'switch',
+            title: 'Allow others to set issue name',
+            description: 'Allowed all players to set issue name',
+            value: pokerOption.allowOthersToSetIssueName,
+            disabled: !props.poker.user[props.profile.userUUID]?.isFacilitator,
+            setValue: (_: ChangeEvent<HTMLInputElement>, checked: boolean) => setPokerOption({...pokerOption, allowOthersToSetIssueName: checked}),
+        },
+        {
+            type: 'switch',
             title: 'Show average in the results',
             description: 'Include the average value in the results of the voting.',
             value: pokerOption.showAverage,

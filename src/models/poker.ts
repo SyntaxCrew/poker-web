@@ -32,6 +32,7 @@ export interface PokerOption {
     allowOthersToShowEstimates: boolean
     allowOthersToDeleteEstimates: boolean
     allowOthersToClearUsers: boolean
+    allowOthersToSetIssueName: boolean
     showAverage: boolean
     estimateOption: {
         decks: Deck[]

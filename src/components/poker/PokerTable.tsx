@@ -1,4 +1,4 @@
-import { CSSProperties, useEffect, useState } from "react";
+import { CSSProperties, useEffect, useMemo, useState } from "react";
 import { TextField } from "@mui/material";
 import PokerButton from "./PokerButton";
 import { isVoteAll } from "../../composables/poker";
@@ -18,6 +18,11 @@ export default function PokeTable(props: {roomID: string, poker: Poker, profile:
         backgroundSize: '200%',
         animation: 'linearGradientFlow 5s infinite linear',
     })
+
+    const allowToSetIssueName = useMemo(
+        () => props.poker.user[props.profile.userUUID]?.isFacilitator || props.poker.option.allowOthersToSetIssueName,
+        [props.poker],
+    );
 
     useEffect(() => {
         const timer = countdown > 0 && setInterval(() => {
@@ -57,7 +62,7 @@ export default function PokeTable(props: {roomID: string, poker: Poker, profile:
                     setValue(setIssueName, { maximum: maximumIssueNameLength, others: [notStartWithSpace, notMultiSpace] })(e)
                     setCountdown(2);
                 }}
-                disabled={!(props.poker.user[props.profile.userUUID]?.isFacilitator || (!props.poker.user[props.profile.userUUID]?.isSpectator && props.poker.user[props.profile.userUUID]?.activeSessions?.length > 0))}
+                disabled={!allowToSetIssueName || !(props.poker.user[props.profile.userUUID]?.isFacilitator || (!props.poker.user[props.profile.userUUID]?.isSpectator && props.poker.user[props.profile.userUUID]?.activeSessions?.length > 0))}
             />
             <PokerButton poker={props.poker} profile={props.profile} />
         </div>

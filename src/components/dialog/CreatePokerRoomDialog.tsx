@@ -39,6 +39,7 @@ export default function CreatePokerRoomDialog(props: {isOpen: boolean, onSubmit:
         allowOthersToShowEstimates: true,
         allowOthersToClearUsers: false,
         allowOthersToDeleteEstimates: false,
+        allowOthersToSetIssueName: true,
         showAverage: true,
     });
 
@@ -103,6 +104,12 @@ export default function CreatePokerRoomDialog(props: {isOpen: boolean, onSubmit:
             description: 'Allowed all players to clear all users',
             value: pokerOption.allowOthersToClearUsers,
             setValue: (_: ChangeEvent<HTMLInputElement>, checked: boolean) => setPokerOption({...pokerOption, allowOthersToClearUsers: checked}),
+        },
+        {
+            title: 'Allow others to set issue name',
+            description: 'Allowed all players to set issue name',
+            value: pokerOption.allowOthersToSetIssueName,
+            setValue: (_: ChangeEvent<HTMLInputElement>, checked: boolean) => setPokerOption({...pokerOption, allowOthersToSetIssueName: checked}),
         },
         {
             title: 'Show average in the results',
