@@ -25,13 +25,13 @@ export default function VotingHistoryDialog(props: {open: boolean, onClose?: () 
                                 <TableCell colSpan={columns.length}><div className="text-center">NO DATA</div></TableCell>
                             </TableRow>}
 
-                            {props.poker.history && Object.values(props.poker.history).sort((a, b) => a.date.toDate().toISOString().localeCompare(b.date.toDate().toISOString())).map((history, index) => {
+                            {props.poker.history && Object.values(props.poker.history).sort((a, b) => a.date?.toDate().toISOString().localeCompare(b.date?.toDate().toISOString())).map((history, index) => {
                                 return (
                                     <TableRow key={index}>
                                         <TableCell component="th" scope="row">{ history.issueName || '-' }</TableCell>
                                         <TableCell component="th" scope="row">{ history.result?.length > 0 ? history.result : '-' }</TableCell>
                                         <TableCell component="th" scope="row">{ history.duration || '-' }</TableCell>
-                                        <TableCell component="th" scope="row">{ history.date.toDate().toLocaleString('en-US') }</TableCell>
+                                        <TableCell component="th" scope="row">{ history.date?.toDate().toLocaleString('en-US') }</TableCell>
                                         <TableCell component="th" scope="row">{ history.voted }/{ history.total }</TableCell>
                                         <TableCell component="th" scope="row">{ history.playerResult.map(player => `${player.displayName} (${player.estimatePoint})`).join(', ') || '-' }</TableCell>
                                     </TableRow>

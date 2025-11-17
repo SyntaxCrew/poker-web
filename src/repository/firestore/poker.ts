@@ -197,7 +197,7 @@ export async function updateEstimateStatus(roomID: string, estimateStatus: Estim
                 result: getSummaryEstimateResult(poker),
             }
             if (poker.votingAt) {
-                pokerHistory.duration = timeDiffString(poker.votingAt.toDate(), now.toDate())
+                pokerHistory.duration = timeDiffString(poker.votingAt?.toDate(), now?.toDate())
             }
             for (const userUUID of Object.keys(poker.user)) {
                 if (!poker.user[userUUID].isSpectator && (poker.user[userUUID].activeSessions?.length > 0 || poker.user[userUUID].estimatePoint != null)) {
@@ -301,7 +301,7 @@ export async function getMyGames(userUID: string): Promise<MyPokerGame[]> {
                 userUID: facilitatorUID,
                 displayName: data.user[facilitatorUID].displayName,
             },
-            createdAt: data.createdAt.toDate(),
+            createdAt: data.createdAt?.toDate(),
             updatedAt: data.updatedAt?.toDate(),
         }
     })

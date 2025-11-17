@@ -42,7 +42,7 @@ export default function PokerArea(props: {roomID: string, poker: Poker, profile:
             : Object.
                 keys(poker.user).
                 filter(userUUID => poker.user[userUUID].displayName && !poker.user[userUUID].isSpectator && ((poker.user[userUUID].estimatePoint != null && poker.estimateStatus !== 'CLOSED') || poker.user[userUUID].activeSessions?.length)).
-                sort((a, b) => poker.user[a].joinedAt.toDate().toISOString().localeCompare(poker.user[b].joinedAt.toDate().toISOString()))
+                sort((a, b) => poker.user[a].joinedAt?.toDate().toISOString().localeCompare(poker.user[b].joinedAt?.toDate().toISOString()))
         setVoterUUIDs(voterUUIDs);
         setDisplayVoteButtonOnTopbar(voterUUIDs.length > maximumVoterNumber);
 
