@@ -210,11 +210,13 @@ export default function GameSettingDialog(props: {open: boolean, onSubmit?: (dat
                     </div>
                 </DialogContent>
 
-                <Divider />
-                <DialogActions sx={{padding: '1rem'}}>
-                    <Button variant="contained" color="error" onClick={() => props.onClose && props.onClose()}>Cancel</Button>
-                    <Button variant="contained" color="primary" onClick={onSubmit} disabled={roomName.trim().length === 0}>Update</Button>
-                </DialogActions>
+                {props.poker.user[props.profile.userUUID]?.isFacilitator && <>
+                    <Divider />
+                    <DialogActions sx={{padding: '1rem'}}>
+                        <Button variant="contained" color="error" onClick={() => props.onClose && props.onClose()}>Cancel</Button>
+                        <Button variant="contained" color="primary" onClick={onSubmit} disabled={roomName.trim().length === 0}>Update</Button>
+                    </DialogActions>
+                </>}
             </>}
 
             {isShowCreateCustomDeck && <CreateCustomDeck
