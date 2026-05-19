@@ -5,7 +5,7 @@ import { Map } from "../../models/generic";
 import { Poker } from "../../models/poker";
 import { UserProfile } from "../../models/user";
 import { pokeCard } from "../../repository/firestore/poker";
-import { numberFormat } from "../../utils/number";
+import { averageFloatingPoint, numberFormat } from "../../utils/number";
 
 export default function PokerPanel(props: {roomID: string, poker: Poker, profile: UserProfile}) {
     const [currentEstimatePoint, setCurrentEstimatePoint] = useState<string>();
@@ -92,7 +92,7 @@ export default function PokerPanel(props: {roomID: string, poker: Poker, profile
 
                 {props.poker.option.showAverage && !isNaN(Number(summary.average)) && <div className="ml-2 flex flex-col justify-center items-center">
                     <div className="text-gray-500">Average:</div>
-                    <div className="text-black font-bold text-xl">{numberFormat(summary.average || 0)}</div>
+                    <div className="text-black font-bold text-xl">{numberFormat(averageFloatingPoint(summary.average || 0))}</div>
                 </div>}
             </div>}
         </div>
